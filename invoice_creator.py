@@ -1,4 +1,5 @@
 from docx import Document
+from docx.shared import Pt
 import pandas as pd
 import calendar
 
@@ -73,6 +74,10 @@ def create_invoice(sessions):
         month_total += sessions[i].earned
 
     doc = Document()
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'Arial'
+    font.size = Pt(10)
 
     t = doc.add_table(rows=len(sessions), cols=5)
 
@@ -81,5 +86,18 @@ def create_invoice(sessions):
         t.cell(i, 1).text = str(sessions[i].pupil)
         t.cell(i, 2).text = str(sessions[i].hrs)
         t.cell(i, 3).text = '£' + str(sessions[i].earned)
+
+        if sessions[i].day == "Sunday":
+            week_total = 0
+
+            if i < 7:
+                for j in range(i):
+                    week_total += sessions[i-j].earned
+
+            else:
+                for j in range(7):
+                    week_total += sessions[i-j].earned
+
+            t.cell(i, 4).text = '£' + str(week_total)
 
     doc.save('{0}_invoice.docx'.format(month_name))
