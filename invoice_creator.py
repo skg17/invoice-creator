@@ -1,5 +1,6 @@
-#from docx import Document
+from docx import Document
 import pandas as pd
+import calendar
 
 class Session:
     def __init__(self, day, date, pupil, hrs, earned):
@@ -10,10 +11,10 @@ class Session:
         self.earned = earned
 
     def __str__(self):
-        return 'Session(' + self.day + ':' + self.date + '-' + self.pupil + '[' + str(self.hrs) + ']' + ')'
+        return 'Session(' + self.day[:3] + ', ' + self.date + ' - ' + self.pupil + '(' + str(self.hrs) + ') - £' + str(self.earned) + ')'
     
     def __repr__(self):
-        return 'Session(' + self.day + ':' + self.date + '-' + self.pupil + '[' + str(self.hrs) + ']' + ')'
+        return 'Session(' + self.day[:3] + ', ' + self.date + ' - ' + self.pupil + '(' + str(self.hrs) + ') - £' + str(self.earned) + ')'
 
 def read_log(filepath):
     df = pd.read_csv(filepath)
@@ -62,3 +63,23 @@ def split_days(df):
             sessions[j].earned = hrs * 20
 
     return sessions
+
+def create_invoice(sessions):
+    month_total = 0
+    day, month, year = sessions[0].date.split('/')
+    month_name = calendar.month_name[int(month)]
+
+    for i in range(len(sessions)):
+        month_total += sessions[i].earned
+
+    doc = Document()
+
+    t = doc.add_table(rows=len(sessions), cols=5)
+
+    for i in range(len(sessions)):
+        t.cell(i, 0).text = str(sessions[i].date)
+        t.cell(i, 1).text = str(sessions[i].pupil)
+        t.cell(i, 2).text = str(sessions[i].hrs)
+        t.cell(i, 3).text = '£' + str(sessions[i].earned)
+
+    doc.save('{0}_invoice.docx'.format(month_name))
