@@ -22,7 +22,7 @@ def read_log(filepath):
     
     return df
 
-def scale_df(df):
+def split_days(df):
     pupils = []
     days = [i for i in df['Day']]
     dates = [i for i in df['Date']]
