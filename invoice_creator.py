@@ -2,11 +2,12 @@
 import pandas as pd
 
 class Session:
-    def __init__(self, day, date, pupil, hrs):
+    def __init__(self, day, date, pupil, hrs, earned):
         self.day = day
         self.date = date
         self.pupil = pupil
         self.hrs = hrs
+        self.earned = earned
 
     def __str__(self):
         return 'Session(' + self.day + ':' + self.date + '-' + self.pupil + '[' + str(self.hrs) + ']' + ')'
@@ -35,7 +36,7 @@ def split_days(df):
         if pupil.isalpha() == True:
             pupils.append(pupil)
 
-            sessions[i] = Session(days[i], dates[i], pupil, 1)
+            sessions[i] = Session(days[i], dates[i], pupil, 1, 20)
 
             i += 1
 
@@ -45,7 +46,7 @@ def split_days(df):
             for n in range(n_pupils):
                 pupil1, pupil2 = pupil.split(',', 1)
 
-                sessions[i] = Session(days[i], dates[i], pupil1, 1)
+                sessions[i] = Session(days[i], dates[i], pupil1, 1, 20)
 
                 pupil = pupil2
 
@@ -58,5 +59,6 @@ def split_days(df):
 
             sessions[j].pupil = pupil
             sessions[j].hrs = hrs
+            sessions[j].earned = hrs * 20
 
     return sessions
