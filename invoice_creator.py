@@ -26,7 +26,7 @@ def read_log(filepath):
     
     return df
 
-def split_days(df):
+def sessions_creator(df):
     pupils = []
     days = [i for i in df['Day']]
     dates = [i for i in df['Date']]
@@ -70,34 +70,18 @@ def split_days(df):
 
     return sessions
 
-def create_invoice(sessions):
-    month_total = 0
-    day, month, year = sessions[0].date.split('/')
-    month_name = calendar.month_name[int(month)]
-
-    for i in range(len(sessions)):
-        month_total += sessions[i].earned
-
-    doc = Document()
-    style = doc.styles['Normal']
-    font = style.font
-    font.name = 'Arial'
-    font.size = Pt(10)
-
-    n_weeks = (len(sessions) // 7) + 1
-
-    t = doc.add_table(rows=len(sessions)+n_weeks+1, cols=5)
-    t.style = 'Table Grid'
-
+def week_sort(sessions):
     weeks = {}
     week = []
+    j = 0
 
     for i in range(len(sessions)):
         week.append(sessions[i])
 
         if sessions[i].day == 'Sunday':
-            weeks[i] = week
+            weeks[j] = week
             week = []
+            j += 1
 
     return weeks
 
