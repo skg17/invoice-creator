@@ -1,5 +1,6 @@
 from docx import Document
 from docx.shared import Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 import pandas as pd
 import calendar
 
@@ -119,5 +120,17 @@ def create_invoice(sessions):
                 week_total += sessions[i-j].earned     
 
             t.cell(i, 4).text = '£' + str(week_total)
+
+    a = t.cell(len(sessions), 0)
+    b = t.cell(len(sessions), 1)
+    c = t.cell(len(sessions), 2)
+    d = t.cell(len(sessions), 3)
+    t.cell(len(sessions), 4).text = '£' + str(month_total)
+
+    A = a.merge(b)
+    B = A.merge(c)
+    C = B.merge(d)
+    C = C.add_paragraph('Total for ' + month_name + ' ' + str(year))
+    C.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
     doc.save('{0}_invoice.docx'.format(month_name))
