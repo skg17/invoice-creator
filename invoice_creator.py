@@ -96,6 +96,10 @@ def create_invoice(sessions):
 
             if d < 7:
                 for j in range(i+1):
+                    a = t.cell(i, 4)
+                    b = t.cell(i-j, 4)
+                    b.merge(a)
+
                     week_total += sessions[i-j].earned
                 
                 t.cell(i, 4).text = '£' + str(week_total)
@@ -106,6 +110,9 @@ def create_invoice(sessions):
                     d2 = int(d2)
 
                     if d2 >= d - 6:
+                        a = t.cell(i, 4)
+                        b = t.cell(i-j, 4)
+                        b.merge(a)
                         week_total += sessions[i-j].earned
 
                 t.cell(i, 4).text = '£' + str(week_total)
@@ -116,7 +123,10 @@ def create_invoice(sessions):
             for j in range(i):
                 if sessions[i-j].day == "Sunday":
                     break
-
+                
+                a = t.cell(i, 4)
+                b = t.cell(i-j, 4)
+                b.merge(a)
                 week_total += sessions[i-j].earned     
 
             t.cell(i, 4).text = '£' + str(week_total)
