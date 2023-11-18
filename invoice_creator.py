@@ -32,6 +32,7 @@ def split_days(df):
     dates = [i for i in df['Date']]
 
     i = 0
+    j = 0
 
     sessions = {}
 
@@ -39,8 +40,8 @@ def split_days(df):
         if pupil.isalpha() == True:
             pupils.append(pupil)
 
-            sessions[i] = Session(days[i], dates[i], pupil, 1, 20)
-
+            sessions[j] = Session(days[i], dates[i], pupil, 1, 20)
+            j += 1
             i += 1
 
         else:
@@ -49,10 +50,13 @@ def split_days(df):
             for n in range(n_pupils):
                 pupil1, pupil2 = pupil.split(',', 1)
 
-                sessions[i] = Session(days[i], dates[i], pupil1, 1, 20)
+                sessions[j] = Session(days[i], dates[i], pupil1, 1, 20)
+                j += 1
 
                 pupil = pupil2
 
+            sessions[j] = Session(days[i], dates[i], pupil, 1, 20)
+            j += 1
             i += 1
 
     for j in range(len(sessions)):
@@ -80,67 +84,21 @@ def create_invoice(sessions):
     font.name = 'Arial'
     font.size = Pt(10)
 
-    t = doc.add_table(rows=len(sessions)+1, cols=5)
+    n_weeks = (len(sessions) // 7) + 1
+
+    t = doc.add_table(rows=len(sessions)+n_weeks+1, cols=5)
     t.style = 'Table Grid'
 
+    weeks = {}
+    week = []
+
     for i in range(len(sessions)):
-        t.cell(i, 0).text = str(sessions[i].date)
-        t.cell(i, 1).text = str(sessions[i].pupil)
-        t.cell(i, 2).text = str(sessions[i].hrs)
-        t.cell(i, 3).text = '£' + str(sessions[i].earned)
+        week.append(sessions[i])
 
-        if sessions[i].day == "Sunday":
-            d, m, y = sessions[i].date.split('/')
-            d = int(d)
-            week_total = 0
+        if sessions[i].day == 'Sunday':
+            weeks[i] = week
+            week = []
 
-            if d < 7:
-                for j in range(i+1):
-                    a = t.cell(i, 4)
-                    b = t.cell(i-j, 4)
-                    b.merge(a)
+    return weeks
 
-                    week_total += sessions[i-j].earned
-                
-                t.cell(i, 4).text = '£' + str(week_total)
-
-            else:
-                for j in range(i):
-                    d2, m2, y2 = sessions[i-j].date.split('/')
-                    d2 = int(d2)
-
-                    if d2 >= d - 6:
-                        a = t.cell(i, 4)
-                        b = t.cell(i-j, 4)
-                        b.merge(a)
-                        week_total += sessions[i-j].earned
-
-                t.cell(i, 4).text = '£' + str(week_total)
-
-        elif i == len(sessions) - 1:
-            week_total = 0
-
-            for j in range(i):
-                if sessions[i-j].day == "Sunday":
-                    break
-                
-                a = t.cell(i, 4)
-                b = t.cell(i-j, 4)
-                b.merge(a)
-                week_total += sessions[i-j].earned     
-
-            t.cell(i, 4).text = '£' + str(week_total)
-
-    a = t.cell(len(sessions), 0)
-    b = t.cell(len(sessions), 1)
-    c = t.cell(len(sessions), 2)
-    d = t.cell(len(sessions), 3)
-    t.cell(len(sessions), 4).text = '£' + str(month_total)
-
-    A = a.merge(b)
-    B = A.merge(c)
-    C = B.merge(d)
-    C = C.add_paragraph('Total for ' + month_name + ' ' + str(year))
-    C.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
-    doc.save('{0}_invoice.docx'.format(month_name))
+    
