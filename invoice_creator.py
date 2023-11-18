@@ -88,16 +88,36 @@ def create_invoice(sessions):
         t.cell(i, 3).text = '£' + str(sessions[i].earned)
 
         if sessions[i].day == "Sunday":
+            d, m, y = sessions[i].date.split('/')
+            d = int(d)
             week_total = 0
 
-            if i < 7:
-                for j in range(i):
+            if d < 7:
+                for j in range(i+1):
                     week_total += sessions[i-j].earned
+                
+                t.cell(i, 4).text = '£' + str(week_total)
 
             else:
-                for j in range(7):
-                    week_total += sessions[i-j].earned
+                for j in range(i):
+                    d2, m2, y2 = sessions[i-j].date.split('/')
+                    d2 = int(d2)
+
+                    if d2 >= d - 6:
+                        week_total += sessions[i-j].earned
+
+                t.cell(i, 4).text = '£' + str(week_total)
+
+        elif i == len(sessions) - 1:
+            week_total = 0
+
+            for j in range(i):
+                if sessions[i-j].day == "Sunday":
+                    break
+
+                week_total += sessions[i-j].earned     
 
             t.cell(i, 4).text = '£' + str(week_total)
+
 
     doc.save('{0}_invoice.docx'.format(month_name))
