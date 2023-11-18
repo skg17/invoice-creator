@@ -79,7 +79,8 @@ def create_invoice(sessions):
     font.name = 'Arial'
     font.size = Pt(10)
 
-    t = doc.add_table(rows=len(sessions), cols=5)
+    t = doc.add_table(rows=len(sessions)+1, cols=5)
+    t.style = 'Table Grid'
 
     for i in range(len(sessions)):
         t.cell(i, 0).text = str(sessions[i].date)
@@ -118,6 +119,5 @@ def create_invoice(sessions):
                 week_total += sessions[i-j].earned     
 
             t.cell(i, 4).text = '£' + str(week_total)
-
 
     doc.save('{0}_invoice.docx'.format(month_name))
