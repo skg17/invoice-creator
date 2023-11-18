@@ -1,6 +1,7 @@
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_ALIGN_VERTICAL
 import pandas as pd
 import calendar
 
@@ -83,6 +84,67 @@ def week_sort(sessions):
             week = []
             j += 1
 
+    weeks[j] = week
+
     return weeks
+
+def create_invoice(sessions, weeks):
+    day, month, year = sessions[0].date.split('/')
+    month_name = calendar.month_name[int(month)]
+
+    month_total = 0
+    for i in range(len(sessions)):
+        month_total += sessions[i].earned
+
+    doc = Document()
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'Arial'
+    font.size = Pt(10)
+
+    n_rows = len(sessions)+len(weeks)+1
+    t = doc.add_table(rows=n_rows, cols=5)
+    t.style = 'Table Grid'
+
+    i = 0
+
+    for j in range(len(weeks)):
+        a = t.cell(i, 0)
+        b = t.cell(i, 1)
+        c = t.cell(i, 2)
+        d = t.cell(i, 3)
+        e = t.cell(i, 4)
+
+        A = a.merge(b)
+        B = A.merge(c)
+        C = B.merge(d)
+        D = C.merge(e)
+
+        D = D.add_paragraph("Week {}".format(j+1))
+        D.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        i += 1
+
+        for session in weeks[j]:
+            t.cell(i, 0).text = str(session.date)
+            t.cell(i, 1).text = str(session.pupil)
+            t.cell(i, 2).text = str(session.hrs)
+            t.cell(i, 3).text = '£' + str(session.earned)
+            i += 1
+
+    a = t.cell(n_rows-1, 0)
+    b = t.cell(n_rows-1, 1)
+    c = t.cell(n_rows-1, 2)
+    d = t.cell(n_rows-1, 3)
+    t.cell(n_rows-1, 4).text = '£' + str(month_total)
+    t.cell(n_rows-1, 4).vertical_alignment = WD_ALIGN_VERTICAL.BOTTOM
+
+    A = a.merge(b)
+    B = A.merge(c)
+    C = B.merge(d)
+    C = C.add_paragraph('Total for ' + month_name + ' ' + str(year))
+    C.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+    doc.save('{0}_invoice.docx'.format(month_name))
 
     
