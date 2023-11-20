@@ -79,7 +79,7 @@ def week_sort(sessions):
     for i in range(len(sessions)):
         week.append(sessions[i])
 
-        if sessions[i].day == 'Sunday':
+        if (sessions[i].day == 'Sunday') and (sessions[i].date != sessions[i+1].date):
             weeks[j] = week
             week = []
             j += 1
@@ -102,11 +102,26 @@ def create_invoice(sessions, weeks):
     font.name = 'Arial'
     font.size = Pt(10)
 
-    n_rows = len(sessions)+len(weeks)+1
+    n_rows = len(sessions)+len(weeks)+2
     t = doc.add_table(rows=n_rows, cols=5)
     t.style = 'Table Grid'
 
-    i = 0
+    A = t.cell(0, 0).add_paragraph("Date")
+    A.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    B = t.cell(0, 1).add_paragraph("Pupil")
+    B.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    C = t.cell(0, 2).add_paragraph("Hours Worked")
+    C.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    D = t.cell(0, 3).add_paragraph("Amount Earned")
+    D.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    E = t.cell(0, 4).add_paragraph("Total")
+    E.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    i = 1
 
     for j in range(len(weeks)):
         a = t.cell(i, 0)
@@ -127,11 +142,18 @@ def create_invoice(sessions, weeks):
 
         week_total = 0
 
-        for session in weeks[j]:
-            t.cell(i, 0).text = str(session.date)
+        for session in weeks[j]:            
             t.cell(i, 1).text = str(session.pupil)
             t.cell(i, 2).text = str(session.hrs)
             t.cell(i, 3).text = '£' + str(session.earned)
+
+            if t.cell(i-1, 0).text == str(session.date):
+                a = t.cell(i-1, 0)
+                b = t.cell(i, 0)
+                a.merge(b)
+
+            else:
+                t.cell(i, 0).text = str(session.date)
 
             week_total += session.earned
 
@@ -140,11 +162,10 @@ def create_invoice(sessions, weeks):
         for k in range(len(weeks[j])):
             a = t.cell(i-1, 4)
             b = t.cell(i-1-k, 4)
-
-            A = a.merge(b)
+            a.merge(b)
 
         t.cell(i-1, 4).text = '£' + str(week_total)
-        t.cell(i-1, 4).vertical_alignment = WD_ALIGN_VERTICAL.BOTTOM    
+        t.cell(i-1, 4).vertical_alignment = WD_ALIGN_VERTICAL.TOP    
 
     a = t.cell(n_rows-1, 0)
     b = t.cell(n_rows-1, 1)
@@ -159,6 +180,6 @@ def create_invoice(sessions, weeks):
     C = C.add_paragraph('Total for ' + month_name + ' ' + str(year))
     C.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
-    doc.save('{0}_invoice.docx'.format(month_name))
+    doc.save('{0}_{1}_invoice.docx'.format(month_name.lower(), year))
 
     
