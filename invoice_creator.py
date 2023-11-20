@@ -143,6 +143,9 @@ def create_invoice(sessions, weeks):
 
             A = a.merge(b)
 
+        t.cell(i-1, 4).text = '£' + str(week_total)
+        t.cell(i-1, 4).vertical_alignment = WD_ALIGN_VERTICAL.BOTTOM    
+
     a = t.cell(n_rows-1, 0)
     b = t.cell(n_rows-1, 1)
     c = t.cell(n_rows-1, 2)
