@@ -125,12 +125,23 @@ def create_invoice(sessions, weeks):
 
         i += 1
 
+        week_total = 0
+
         for session in weeks[j]:
             t.cell(i, 0).text = str(session.date)
             t.cell(i, 1).text = str(session.pupil)
             t.cell(i, 2).text = str(session.hrs)
             t.cell(i, 3).text = '£' + str(session.earned)
+
+            week_total += session.earned
+
             i += 1
+
+        for k in range(len(weeks[j])):
+            a = t.cell(i-1, 4)
+            b = t.cell(i-1-k, 4)
+
+            A = a.merge(b)
 
     a = t.cell(n_rows-1, 0)
     b = t.cell(n_rows-1, 1)
