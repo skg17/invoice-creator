@@ -4,6 +4,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL
 import pandas as pd
 import calendar
+from pathlib import Path
 
 class Session:
     def __init__(self, day, date, pupil, hrs, earned):
@@ -180,6 +181,16 @@ def create_invoice(sessions, weeks):
     C = C.add_paragraph('Total for ' + month_name + ' ' + str(year))
     C.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
-    doc.save('{0}_{1}_invoice.docx'.format(month_name.lower(), year))
+    doc.save('{0} {1} Invoice.docx'.format(month_name, year))
+    print("Successfully created invoice '{0} {1} Invoice.docx'.".format(month_name, year))
 
-    
+
+path = input("Enter .csv file directory: ")
+
+file_path = Path(path)
+session_list = read_log(file_path)
+
+sessions = sessions_creator(session_list)
+weeks = week_sort(sessions)
+
+create_invoice(sessions, weeks)
