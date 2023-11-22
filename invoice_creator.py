@@ -51,12 +51,12 @@ def sessions_creator(df):
             for n in range(n_pupils):
                 pupil1, pupil2 = pupil.split(',', 1)
 
-                sessions[j] = Session(days[i], dates[i], pupil1, 1, 20)
+                sessions[j] = Session(days[i], dates[i], pupil1, 1, round(20, 2))
                 j += 1
 
                 pupil = pupil2
 
-            sessions[j] = Session(days[i], dates[i], pupil, 1, 20)
+            sessions[j] = Session(days[i], dates[i], pupil, 1, round(20, 2))
             j += 1
             i += 1
 
@@ -67,7 +67,7 @@ def sessions_creator(df):
 
             sessions[j].pupil = pupil
             sessions[j].hrs = hrs
-            sessions[j].earned = hrs * 20
+            sessions[j].earned = round(hrs * 20, 2)
 
     return sessions
 
@@ -79,7 +79,7 @@ def week_sort(sessions):
     for i in range(len(sessions)):
         week.append(sessions[i])
 
-        if (sessions[i].day == 'Sunday') and (sessions[i].date != sessions[i+1].date):
+        if (sessions[i].day == 'Sunday') and ((i == len(sessions)-1) or (sessions[i].date != sessions[i+1].date)):
             weeks[j] = week
             week = []
             j += 1
