@@ -16,7 +16,6 @@ setup(
     name="invoice-creator",
     version=VERSION,
     author="Sahil Goonraz",
-    author_email="<mail@neuralnine.com>",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=long_description,
