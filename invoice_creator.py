@@ -5,6 +5,7 @@ from docx.enum.table import WD_ALIGN_VERTICAL
 import pandas as pd
 import calendar
 from pathlib import Path
+from argparse import ArgumentParser
 
 class Session:
     def __init__(self, day, date, pupil, hrs, earned):
@@ -185,12 +186,15 @@ def create_invoice(sessions, weeks):
     print("Successfully created invoice '{0} {1} Invoice.docx'.".format(month_name, year))
 
 
-path = input("Enter .csv file directory: ")
+if __name__ == "__main__":
+    parser = ArgumentParser(description="Generate an invoice")
+    parser.add_argument('path', help="The filepath to the work log csv file.")
+    arguments = parser.parse_args()
+    
+    file_path = Path(arguments.path)
+    session_list = read_log(file_path)
 
-file_path = Path(path)
-session_list = read_log(file_path)
+    sessions = sessions_creator(session_list)
+    weeks = week_sort(sessions)
 
-sessions = sessions_creator(session_list)
-weeks = week_sort(sessions)
-
-create_invoice(sessions, weeks)
+    create_invoice(sessions, weeks)
