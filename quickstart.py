@@ -86,7 +86,7 @@ def get_lessons_info(month, year, control_str = ""):
         duration = end.time().hour - start.time().hour + (end.time().minute - start.time().minute) / 60
 
         # Adds info to list 
-        lessons_info.append([start.date(), student, duration])
+        lessons_info.append([start.date().strftime('%d/%m/%Y'), student, duration])
 
     return lessons_info
 
