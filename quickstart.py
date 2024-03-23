@@ -67,9 +67,15 @@ def main(month, year, control_str = ""):
     )
     events = events_result.get("items", [])
 
-    # Create dictionary for all lessons taught
+    # Gather data for dictionary
     for event in events:
       if control_str in event["summary"]:
+        # Get student name from event summary
+        stripped_str = event["summary"][len(control_str):]
+        split_str = stripped_str.split(" ")
+        student = split_str[0]
+        
+        # Get lesson date, time and duration
         start = event["start"].get("dateTime", event["start"].get("date"))
         start = datetime.datetime.fromisoformat(start)
         end = event["end"].get("dateTime", event["end"].get("date"))
@@ -77,11 +83,13 @@ def main(month, year, control_str = ""):
 
         duration = end.time().hour - start.time().hour + (end.time().minute - start.time().minute) / 60
 
+        # Add date and info to respective list    
         lesson_dates.append(start)
-        lesson_info.append([event["summary"], duration])
+        lesson_info.append([student, duration])
 
+    # Create dictionary
     all_lessons = dict(zip(lesson_dates, lesson_info))
-    print(all_lessons.values())
+    return all_lessons
 
   except HttpError as error:
     print(f"An error occurred: {error}")
