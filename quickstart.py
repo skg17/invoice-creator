@@ -26,7 +26,7 @@ def get_lessons_info(month, year, control_str = ""):
                         from the event name, leaving only the student's name.
 
   Returns:
-    lesson_info (list : list containing sublists made of a lesson's date, student and duration.
+    lessons_info (list : list containing sublists made of a lesson's date, student and duration.
   """
   creds = None
   # The file token.json stores the user's access and refresh tokens, and is
@@ -56,7 +56,7 @@ def get_lessons_info(month, year, control_str = ""):
     start = datetime.datetime(year, month, 1).isoformat() + "Z"
     end = datetime.datetime(year, month, days).isoformat() + "Z"
 
-    lesson_info = []
+    lessons_info = []
 
     events_result = (
         service.events()
@@ -86,9 +86,9 @@ def get_lessons_info(month, year, control_str = ""):
         duration = end.time().hour - start.time().hour + (end.time().minute - start.time().minute) / 60
 
         # Adds info to list 
-        lesson_info.append([start.date(), student, duration])
+        lessons_info.append([start.date(), student, duration])
 
-    return lesson_info
+    return lessons_info
 
   except HttpError as error:
     print(f"An error occurred: {error}")
