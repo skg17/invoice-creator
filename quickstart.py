@@ -13,9 +13,14 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 
-def main():
-  """Shows basic usage of the Google Calendar API.
-  Prints the start and name of the next 10 events on the user's calendar.
+def main(month, year):
+  """
+  Creates a dictionary containing info on taught lessons, where the dictionary key is the date
+  and time of a lesson, and the value is a tuple containg student name and lesson duration.
+
+  Arguments:
+    month (int) : month for which to create dictionary for (e.g. for March enter 3)
+    year (int)  : year for which to create dictionary for (e.g. for 2024 enter 2024)
   """
   creds = None
   # The file token.json stores the user's access and refresh tokens, and is
@@ -40,9 +45,6 @@ def main():
     service = build("calendar", "v3", credentials=creds)
 
     # Call the Calendar API
-    month = datetime.datetime.today().month
-    year = 2024
-
     _, days = calendar.monthrange(year, month)
 
     start = datetime.datetime(year, month, 1).isoformat() + "Z"
@@ -62,7 +64,7 @@ def main():
     )
     events = events_result.get("items", [])
 
-    # Prints all the lessons taught alongside their date and duration
+    # Create dictionary for all lessons taught
     for event in events:
       if "Mr Sahil with " in event["summary"]:
         start = event["start"].get("dateTime", event["start"].get("date"))
