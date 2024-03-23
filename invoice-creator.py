@@ -23,15 +23,18 @@ def main():
     #print(tabulate(lessons_info, headers=headers, tablefmt='grid'))
 
     week = 1
-    week_day_one = 0
-
     for i in range(len(lessons_info)):
         if (i != len(lessons_info)-1) and (lessons_info[i][4] > lessons_info[i+1][4]):
-            print(tabulate(lessons_info[week_day_one:i+1], tablefmt='grid'))
-
+            print(tabulate(lessons_info[i:i+1], tablefmt='grid'))
+            
             week += 1
-            week_day_one = i+1
             print(week)
+        
+        elif (i != len(lessons_info)-1):
+            print(tabulate(lessons_info[i:i+1], tablefmt='grid'))
+
+        else:
+            print(tabulate(lessons_info[i:i+1], tablefmt='grid'))
 
 if __name__ == "__main__":
   main()
