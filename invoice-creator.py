@@ -1,10 +1,12 @@
 import datetime
+import calendar
 from tabulate import tabulate
 from quickstart import get_lessons_info
 
 def main():
     month = datetime.datetime.now().month
     year = datetime.datetime.now().year
+
     control_str = "Mr Sahil with "
     hourly_rate = 20
 
@@ -12,8 +14,12 @@ def main():
 
     for i in range(len(lessons_info)):
         lessons_info[i].append(hourly_rate * lessons_info[i][2])
+        lessons_info[i].append(lessons_info[i][0].weekday())
+        lessons_info[i][0] = lessons_info[i][0].strftime('%d/%m/%Y')
 
-    headers = ["Date", "Student", "Hrs", "Earned"]
+    lessons_info.sort()
+
+    headers = ["Date", "Student", "Hrs", "Earned", "Weekday"]
     print(tabulate(lessons_info, headers=headers, tablefmt='grid'))
 
 if __name__ == "__main__":
