@@ -15,15 +15,18 @@ SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 def get_lessons_info(month, year, control_str = ""):
   """
-  Creates a dictionary containing info on taught lessons, where the dictionary key is the date
-  and time of a lesson, and the value is a tuple containg student name and lesson duration.
+  Returns a list containing different info partaining to the lessons
+  taught in a given month/year.
 
   Arguments:
-    month (int)       : month for which to create dictionary for (e.g. for March enter 3)
-    year (int)        : year for which to create dictionary for (e.g. for 2024 enter 2024)
+    month (int)       : month for which to create dictionary for (e.g. for March enter 3).
+    year (int)        : year for which to create dictionary for (e.g. for 2024 enter 2024).
     control_str (str) : the function will check for the specified string in the event name, and only treat
                         it as a lesson if the control string is present. The control string will be removed
                         from the event name, leaving only the student's name.
+
+  Returns:
+    lesson_info (list : list containing sublists made of a lesson's date, student and duration.
   """
   creds = None
   # The file token.json stores the user's access and refresh tokens, and is
@@ -53,7 +56,6 @@ def get_lessons_info(month, year, control_str = ""):
     start = datetime.datetime(year, month, 1).isoformat() + "Z"
     end = datetime.datetime(year, month, days).isoformat() + "Z"
 
-    lesson_dates = []
     lesson_info = []
 
     events_result = (
@@ -67,7 +69,7 @@ def get_lessons_info(month, year, control_str = ""):
     )
     events = events_result.get("items", [])
 
-    # Gather data for dictionary
+    # Gather data for list
     for event in events:
       if control_str in event["summary"]:
         # Get student name from event summary
@@ -83,13 +85,10 @@ def get_lessons_info(month, year, control_str = ""):
 
         duration = end.time().hour - start.time().hour + (end.time().minute - start.time().minute) / 60
 
-        # Add date and info to respective list    
-        lesson_dates.append(start)
-        lesson_info.append([student, duration])
+        # Adds info to list 
+        lesson_info.append([start.date(), student, duration])
 
-    # Create dictionary
-    all_lessons = dict(zip(lesson_dates, lesson_info))
-    return all_lessons
+    return lesson_info
 
   except HttpError as error:
     print(f"An error occurred: {error}")
