@@ -13,7 +13,7 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 
-def main(month, year, control_str = ""):
+def get_lessons_info(month, year, control_str = ""):
   """
   Creates a dictionary containing info on taught lessons, where the dictionary key is the date
   and time of a lesson, and the value is a tuple containg student name and lesson duration.
@@ -93,7 +93,3 @@ def main(month, year, control_str = ""):
 
   except HttpError as error:
     print(f"An error occurred: {error}")
-
-
-if __name__ == "__main__":
-  main(3, 2024, "Mr Sahil with ")
