@@ -22,19 +22,23 @@ def main():
     headers = ["Date", "Student", "Hrs", "Earned", "Weekday"]
     #print(tabulate(lessons_info, headers=headers, tablefmt='grid'))
 
-    week = 1
-    for i in range(len(lessons_info)):
-        if (i != len(lessons_info)-1) and (lessons_info[i][4] > lessons_info[i+1][4]):
-            print(tabulate(lessons_info[i:i+1], tablefmt='grid'))
-            
-            week += 1
-            print(week)
-        
-        elif (i != len(lessons_info)-1):
-            print(tabulate(lessons_info[i:i+1], tablefmt='grid'))
+    week = []
+    month = []
 
-        else:
-            print(tabulate(lessons_info[i:i+1], tablefmt='grid'))
+    for i in range(len(lessons_info)):
+        week.append(lessons_info[i])
+        if (i != len(lessons_info)-1) and (lessons_info[i][4] > lessons_info[i+1][4]):
+            #print(lessons_info[i])
+            #week += 1
+            #print(week)
+            month.append(week)
+            week = []
+        
+        elif i == len(lessons_info)-1:
+            month.append(week)
+
+    for week in month:
+        print(tabulate(week, headers=headers, tablefmt='grid'))
 
 if __name__ == "__main__":
   main()
