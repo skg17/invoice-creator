@@ -40,9 +40,7 @@ def main():
     service = build("calendar", "v3", credentials=creds)
 
     # Call the Calendar API
-    now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
-    
-    month = 3
+    month = datetime.datetime.today().month
     year = 2024
 
     _, days = calendar.monthrange(year, month)
@@ -50,7 +48,7 @@ def main():
     start = datetime.datetime(year, month, 1).isoformat() + "Z"
     end = datetime.datetime(year, month, days).isoformat() + "Z"
 
-    print("Getting the upcoming 10 events")
+    print("Printing all events for the month of {0}".format(calendar.month_name[month]))
     events_result = (
         service.events()
         .list(
@@ -63,7 +61,7 @@ def main():
     events = events_result.get("items", [])
 
     if not events:
-      print("No upcoming events found.")
+      print("No events found for the month of {0}.".format(calendar.month_name[month]))
       return
 
     # Prints the start and name of the next 10 events
