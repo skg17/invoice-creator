@@ -64,11 +64,17 @@ def main():
       print("No events found for the month of {0}.".format(calendar.month_name[month]))
       return
 
-    # Prints the start and name of the next 10 events
+    # Prints all the lessons taught alongside their date and duration
     for event in events:
-      start = event["start"].get("dateTime", event["start"].get("date"))
-      end = event["end"].get("dateTime", event["end"].get("date"))
-      print(start, end, event["summary"])
+      if "Mr Sahil with " in event["summary"]:
+        start = event["start"].get("dateTime", event["start"].get("date"))
+        start = datetime.datetime.fromisoformat(start)
+        end = event["end"].get("dateTime", event["end"].get("date"))
+        end = datetime.datetime.fromisoformat(end)
+
+        duration = end.time().hour - start.time().hour + (end.time().minute - start.time().minute) / 60
+      
+        print(start.date(), duration, event["summary"])
 
   except HttpError as error:
     print(f"An error occurred: {error}")
