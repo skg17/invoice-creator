@@ -13,14 +13,17 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 
-def main(month, year):
+def main(month, year, control_str = ""):
   """
   Creates a dictionary containing info on taught lessons, where the dictionary key is the date
   and time of a lesson, and the value is a tuple containg student name and lesson duration.
 
   Arguments:
-    month (int) : month for which to create dictionary for (e.g. for March enter 3)
-    year (int)  : year for which to create dictionary for (e.g. for 2024 enter 2024)
+    month (int)       : month for which to create dictionary for (e.g. for March enter 3)
+    year (int)        : year for which to create dictionary for (e.g. for 2024 enter 2024)
+    control_str (str) : the function will check for the specified string in the event name, and only treat
+                        it as a lesson if the control string is present. The control string will be removed
+                        from the event name, leaving only the student's name.
   """
   creds = None
   # The file token.json stores the user's access and refresh tokens, and is
@@ -66,7 +69,7 @@ def main(month, year):
 
     # Create dictionary for all lessons taught
     for event in events:
-      if "Mr Sahil with " in event["summary"]:
+      if control_str in event["summary"]:
         start = event["start"].get("dateTime", event["start"].get("date"))
         start = datetime.datetime.fromisoformat(start)
         end = event["end"].get("dateTime", event["end"].get("date"))
@@ -78,11 +81,11 @@ def main(month, year):
         lesson_info.append([event["summary"], duration])
 
     all_lessons = dict(zip(lesson_dates, lesson_info))
-    return all_lessons
+    print(all_lessons.values())
 
   except HttpError as error:
     print(f"An error occurred: {error}")
 
 
 if __name__ == "__main__":
-  main()
+  main(3, 2024, "Mr Sahil with ")
