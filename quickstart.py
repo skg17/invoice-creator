@@ -48,7 +48,9 @@ def main():
     start = datetime.datetime(year, month, 1).isoformat() + "Z"
     end = datetime.datetime(year, month, days).isoformat() + "Z"
 
-    print("Printing all events for the month of {0}".format(calendar.month_name[month]))
+    lesson_dates = []
+    lesson_info = []
+
     events_result = (
         service.events()
         .list(
@@ -60,10 +62,6 @@ def main():
     )
     events = events_result.get("items", [])
 
-    if not events:
-      print("No events found for the month of {0}.".format(calendar.month_name[month]))
-      return
-
     # Prints all the lessons taught alongside their date and duration
     for event in events:
       if "Mr Sahil with " in event["summary"]:
@@ -73,8 +71,12 @@ def main():
         end = datetime.datetime.fromisoformat(end)
 
         duration = end.time().hour - start.time().hour + (end.time().minute - start.time().minute) / 60
-      
-        print(start.date(), duration, event["summary"])
+
+        lesson_dates.append(start)
+        lesson_info.append([event["summary"], duration])
+
+    all_lessons = dict(zip(lesson_dates, lesson_info))
+    return all_lessons
 
   except HttpError as error:
     print(f"An error occurred: {error}")
