@@ -23,7 +23,7 @@ def main():
     #print(tabulate(lessons_info, headers=headers, tablefmt='grid'))
 
     week = []
-    month = []
+    month_lessons = []
 
     for i in range(len(lessons_info)):
         week.append(lessons_info[i])
@@ -31,14 +31,28 @@ def main():
             #print(lessons_info[i])
             #week += 1
             #print(week)
-            month.append(week)
+            month_lessons.append(week)
             week = []
         
         elif i == len(lessons_info)-1:
-            month.append(week)
+            month_lessons.append(week)
 
-    for week in month:
+    weekly_total = []
+
+    for week in month_lessons:
+        print("\nWeek {}".format(month_lessons.index(week)+1))
         print(tabulate(week, headers=headers, tablefmt='grid'))
+        
+        week_total = 0
+        
+        for day in week:
+            week_total += day[3]
+        
+        weekly_total.append(week_total)
+        print("Total earned in Week {0}: £{1}".format(month_lessons.index(week)+1, week_total))
+
+    print("\nTotal earned in {0} {1}: £{2}".format(calendar.month_name[month], year, sum(weekly_total)))
+
 
 if __name__ == "__main__":
   main()
