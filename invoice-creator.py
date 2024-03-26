@@ -58,12 +58,22 @@ def main():
         with open('invoice.md', 'a') as f:
             f.write('\n### Week {0} - Total earned: £{1}\n'.format(month_lessons.index(week)+1, week_total))
             df.to_markdown(f, index=False)
-            f.write('\n\n')
+            f.write('\n\n')      
 
     print("\nTotal earned in {0} {1}: £{2}".format(calendar.month_name[month], year, sum(weekly_total)))
 
     with open('invoice.md', 'a') as f:
         f.write('\n### Total earned in {0} {1}: £{2}'.format(calendar.month_name[month], year, sum(weekly_total)))
+
+    return month_lessons, weekly_total
+
+def createPDF(month_lesssons, weekly_total):
+    with open('invoice.html', 'a') as f, open('head.html', 'r') as head, open('tail.html', 'r') as tail:
+        for line in head:
+            f.write(line)
+        
+        for line in tail:
+            f.write(tail)
 
 if __name__ == "__main__":
   main()
