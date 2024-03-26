@@ -56,14 +56,14 @@ def main():
         print("Total earned in Week {0}: £{1}".format(month_lessons.index(week)+1, week_total))
 
         with open('invoice.md', 'a') as f:
-            f.write('\n## Week {0} - Total earned: £{1}\n'.format(month_lessons.index(week)+1, week_total))
+            f.write('\n### Week {0} - Total earned: £{1}\n'.format(month_lessons.index(week)+1, week_total))
             df.to_markdown(f, index=False)
             f.write('\n\n')
 
     print("\nTotal earned in {0} {1}: £{2}".format(calendar.month_name[month], year, sum(weekly_total)))
-    
+
     with open('invoice.md', 'a') as f:
-        f.write('\n## Total earned in {0} {1}: £{2}'.format(calendar.month_name[month], year, sum(weekly_total)))
+        f.write('\n### Total earned in {0} {1}: £{2}'.format(calendar.month_name[month], year, sum(weekly_total)))
 
 if __name__ == "__main__":
   main()
