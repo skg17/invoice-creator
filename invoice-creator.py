@@ -1,5 +1,7 @@
 import datetime
 import calendar
+import jinja2
+import pdfkit
 import pandas as pd
 from tabulate import tabulate
 from quickstart import get_lessons_info
@@ -67,13 +69,30 @@ def main():
 
     return month_lessons, weekly_total
 
-def createPDF(month_lesssons, weekly_total):
+def createPDF(month_lessons, weekly_total):
+    i = 0
+
     with open('invoice.html', 'a') as f, open('head.html', 'r') as head, open('tail.html', 'r') as tail:
-        for line in head:
-            f.write(line)
+        f.write(head.read())
+
+        for week in month_lessons:
+            for day in week:
+                f.write('\n<tr>')
+                f.write('\n<td>{}</td>'.format(day[0]))
+                f.write('\n<td>{}</td>'.format(day[1]))
+                f.write('\n<td>{}</td>'.format(day[2]))
+                f.write('<td>£20</td>')
+                f.write('\n<td>{}</td>'.format(day[3]))
+                f.write('\n</tr>')
+
+            f.write('\n<tr>')
+            f.write('\n<td colspan="4" align="right"><strong>Total Earned for Week {}</strong></td>'.format(i+1))
+            f.write('\n<td><strong>£{}</strong></td>'.format(weekly_total[i]))
+            f.write('\n</tr>')
+            i += 1
         
-        for line in tail:
-            f.write(tail)
+        f.write(tail.read())
 
 if __name__ == "__main__":
-  main()
+  month_lessons, weekly_total = main()
+  createPDF(month_lessons, weekly_total)
