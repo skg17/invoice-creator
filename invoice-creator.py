@@ -93,6 +93,29 @@ def createPDF(month_lessons, weekly_total):
         
         f.write(tail.read())
 
+    today_date = datetime.datetime.today().strftime("%d %b, %Y")
+    invoice_no = 696969
+    account_no = 123456
+    sort_code = 12-34-56
+
+    context = {'client_name': 'client_name', 'address_line1': 'address_line1',
+               'address_line2': 'address_line2', 'invoice_date': today_date,
+               'address_line3': 'address_line3', 'invoice_no': invoice_no,
+               'user_email': 'email', 'account_no': account_no, 'sort_code': sort_code,
+               'monthly_total': sum(weekly_total)
+    }
+
+    template_loader = jinja2.FileSystemLoader('./')
+    template_env = jinja2.Environment(loader=template_loader)
+
+    html_template = 'invoice.html'
+    template = template_env.get_template(html_template)
+    output_text = template.render(context)
+
+    config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
+    output_pdf = 'invoice.pdf'
+    pdfkit.from_string(output_text, output_pdf, configuration=config, css='invoice.css')
+
 if __name__ == "__main__":
   month_lessons, weekly_total = main()
   createPDF(month_lessons, weekly_total)
