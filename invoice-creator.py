@@ -1,5 +1,6 @@
 import datetime
 import calendar
+import pandas as pd
 from tabulate import tabulate
 from quickstart import get_lessons_info
 
@@ -40,16 +41,24 @@ def main():
     weekly_total = []
 
     for week in month_lessons:
-        print("\nWeek {}".format(month_lessons.index(week)+1))
-        print(tabulate(week, headers=headers, tablefmt='grid'))
-        
         week_total = 0
         
         for day in week:
             week_total += day[3]
+            day[3] = "£{}".format(day[3])
+
+        print("\nWeek {}".format(month_lessons.index(week)+1))
+        print(tabulate(week, headers=headers, tablefmt='grid'))
+
+        df = pd.DataFrame(week, columns=headers)
         
         weekly_total.append(week_total)
         print("Total earned in Week {0}: £{1}".format(month_lessons.index(week)+1, week_total))
+
+        with open('out.md', 'a') as f:
+            f.write('\n## Week {0} - Total earned: £{1}\n'.format(month_lessons.index(week)+1, week_total))
+            df.to_markdown(f, index=False)
+            f.write('\n\n')
 
     print("\nTotal earned in {0} {1}: £{2}".format(calendar.month_name[month], year, sum(weekly_total)))
 
