@@ -81,13 +81,13 @@ def createPDF(month_lessons, weekly_total):
                 f.write('\n<td>{}</td>'.format(day[0]))
                 f.write('\n<td>{}</td>'.format(day[1]))
                 f.write('\n<td>{}</td>'.format(day[2]))
-                f.write('<td>£20</td>')
+                f.write('<td>&pound20</td>')
                 f.write('\n<td>{}</td>'.format(day[3]))
                 f.write('\n</tr>')
 
             f.write('\n<tr>')
             f.write('\n<td colspan="4" align="right"><strong>Total Earned for Week {}</strong></td>'.format(i+1))
-            f.write('\n<td><strong>£{}</strong></td>'.format(weekly_total[i]))
+            f.write('\n<td><strong>&pound{}</strong></td>'.format(weekly_total[i]))
             f.write('\n</tr>')
             i += 1
         
@@ -96,7 +96,7 @@ def createPDF(month_lessons, weekly_total):
     today_date = datetime.datetime.today().strftime("%d %b, %Y")
     invoice_no = 696969
     account_no = 123456
-    sort_code = 12-34-56
+    sort_code = "12-34-56"
 
     context = {'client_name': 'client_name', 'address_line1': 'address_line1',
                'address_line2': 'address_line2', 'invoice_date': today_date,
@@ -112,7 +112,7 @@ def createPDF(month_lessons, weekly_total):
     template = template_env.get_template(html_template)
     output_text = template.render(context)
 
-    config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
+    config = pdfkit.configuration(wkhtmltopdf='')
     output_pdf = 'invoice.pdf'
     pdfkit.from_string(output_text, output_pdf, configuration=config, css='invoice.css')
 
