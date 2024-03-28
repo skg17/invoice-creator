@@ -72,9 +72,12 @@ def main():
 def createPDF(month_lessons, weekly_total):
     i = 0
 
-    with open('invoice.html', 'a') as f, open('head.html', 'r') as head, open('tail.html', 'r') as tail:
-        f.write(head.read())
+    head = open('head.html', 'r')
+    tail = open('tail.html', 'r')
 
+    with open('invoice.html', 'a') as f:
+        f.write(head.read())
+        
         for week in month_lessons:
             for day in week:
                 f.write('\n<tr>')
@@ -90,7 +93,7 @@ def createPDF(month_lessons, weekly_total):
             f.write('\n<td><strong>&pound{}</strong></td>'.format(weekly_total[i]))
             f.write('\n</tr>')
             i += 1
-        
+
         f.write(tail.read())
 
     today_date = datetime.datetime.today().strftime("%d %b, %Y")
