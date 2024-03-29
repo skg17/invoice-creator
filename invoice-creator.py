@@ -2,6 +2,7 @@ import datetime
 import calendar
 import jinja2
 import pdfkit
+import json
 from tabulate import tabulate
 from quickstart import get_lessons_info
 
@@ -9,8 +10,10 @@ def main():
     month = datetime.datetime.now().month
     year = datetime.datetime.now().year
 
-    control_str = "Mr Sahil with "
-    hourly_rate = 20
+    user_settings = json.load(open('user_settings.json'))
+
+    control_str = user_settings["control_str"]
+    hourly_rate = user_settings["hourly_rate"]
 
     lessons_info = get_lessons_info(month, year, control_str)
 
@@ -60,6 +63,7 @@ def createPDF(month_lessons, weekly_total):
     head = open('head.html', 'r')
     tail = open('tail.html', 'r')
     new_table = open('new_table.html', 'r').read()
+    user_settings = json.load(open('user_settings.json'))
 
     with open('invoice.html', 'a') as f:
         f.write(head.read())
@@ -70,7 +74,7 @@ def createPDF(month_lessons, weekly_total):
                 f.write('\n<tr>')
                 f.write('\n<td>{}</td>'.format(day[0]))
                 f.write('\n<td>{}</td>'.format(day[1]))
-                f.write('\n<td>&pound20</td>')
+                f.write('\n<td>&pound{}</td>'.format(user_settings["hourly_rate"]))
                 f.write('\n<td>{}</td>'.format(day[2]))
                 f.write('\n<td class="bold">{}</td>'.format(day[3]))
                 f.write('\n</tr>')
@@ -86,13 +90,16 @@ def createPDF(month_lessons, weekly_total):
 
     today_date = datetime.datetime.today().strftime("%d %b, %Y")
     invoice_no = 696969
-    account_no = 123456
-    sort_code = "12-34-56"
 
-    context = {'client_name': 'client_name', 'address_line1': 'address_line1',
-               'address_line2': 'address_line2', 'invoice_date': today_date,
-               'address_line3': 'address_line3', 'invoice_no': invoice_no,
-               'user_email': 'email', 'account_no': account_no, 'sort_code': sort_code,
+    context = {'client_name': user_settings['client_name'],
+               'address_line1': user_settings['address_line1'],
+               'address_line2': user_settings['address_line2'],
+               'invoice_date': today_date,
+               'address_line3': user_settings['address_line3'],
+               'invoice_no': invoice_no,
+               'user_email': user_settings["user_email"],
+               'account_no': user_settings["account_no"],
+               'sort_code': user_settings["sort_code"],
                'monthly_total': sum(weekly_total)
     }
 
