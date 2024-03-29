@@ -89,7 +89,8 @@ def createPDF(month_lessons, weekly_total):
         f.write(tail.read())
 
     today_date = datetime.datetime.today().strftime("%d %b, %Y")
-    invoice_no = 696969
+    _, month, year = month_lessons[0][0][0].split('/')
+    invoice_no = year + month
 
     context = {'client_name': user_settings['client_name'],
                'address_line1': user_settings['address_line1'],
