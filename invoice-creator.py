@@ -2,7 +2,6 @@ import datetime
 import calendar
 import jinja2
 import pdfkit
-import pandas as pd
 from tabulate import tabulate
 from quickstart import get_lessons_info
 
@@ -23,7 +22,6 @@ def main():
     lessons_info.sort()
 
     headers = ["Date", "Student", "Hrs", "Earned", "Weekday"]
-    #print(tabulate(lessons_info, headers=headers, tablefmt='grid'))
 
     week = []
     month_lessons = []
@@ -31,9 +29,6 @@ def main():
     for i in range(len(lessons_info)):
         week.append(lessons_info[i])
         if (i != len(lessons_info)-1) and (lessons_info[i][4] > lessons_info[i+1][4]):
-            #print(lessons_info[i])
-            #week += 1
-            #print(week)
             month_lessons.append(week)
             week = []
         
@@ -51,21 +46,11 @@ def main():
 
         print("\nWeek {}".format(month_lessons.index(week)+1))
         print(tabulate(week, headers=headers, tablefmt='grid'))
-
-        df = pd.DataFrame(week, columns=headers)
         
         weekly_total.append(week_total)
-        print("Total earned in Week {0}: &pound{1}".format(month_lessons.index(week)+1, week_total))
+        print("Total earned in Week {0}: £{1}".format(month_lessons.index(week)+1, week_total))
 
-        with open('invoice.md', 'a') as f:
-            f.write('\n### Week {0} - Total earned: &pound{1}\n'.format(month_lessons.index(week)+1, week_total))
-            df.to_markdown(f, index=False)
-            f.write('\n\n')      
-
-    print("\nTotal earned in {0} {1}: &pound{2}".format(calendar.month_name[month], year, sum(weekly_total)))
-
-    with open('invoice.md', 'a') as f:
-        f.write('\n### Total earned in {0} {1}: &pound{2}'.format(calendar.month_name[month], year, sum(weekly_total)))
+    print("\nTotal earned in {0} {1}: £{2}".format(calendar.month_name[month], year, sum(weekly_total)))
 
     return month_lessons, weekly_total
 
