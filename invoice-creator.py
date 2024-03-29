@@ -45,15 +45,15 @@ def main():
         
         for day in week:
             week_total += day[3]
-            day[3] = "&pound{}".format(day[3])
+            day[3] = "&pound{0:.2f}".format(day[3])
 
         print("\nWeek {}".format(month_lessons.index(week)+1))
         print(tabulate(week, headers=headers, tablefmt='grid'))
         
         weekly_total.append(week_total)
-        print("Total earned in Week {0}: £{1}".format(month_lessons.index(week)+1, week_total))
+        print("Total earned in Week {0}: £{1:2f}".format(month_lessons.index(week)+1, week_total))
 
-    print("\nTotal earned in {0} {1}: £{2}".format(calendar.month_name[month], year, sum(weekly_total)))
+    print("\nTotal earned in {0} {1}: £{2:.2f}".format(calendar.month_name[month], year, sum(weekly_total)))
 
     return month_lessons, weekly_total
 
@@ -74,14 +74,14 @@ def createPDF(month_lessons, weekly_total):
                 f.write('\n<tr>')
                 f.write('\n<td>{}</td>'.format(day[0]))
                 f.write('\n<td>{}</td>'.format(day[1]))
-                f.write('\n<td>&pound{}</td>'.format(user_settings["hourly_rate"]))
+                f.write('\n<td>&pound{0:.2f}</td>'.format(user_settings["hourly_rate"]))
                 f.write('\n<td>{}</td>'.format(day[2]))
                 f.write('\n<td class="bold">{}</td>'.format(day[3]))
                 f.write('\n</tr>')
 
             f.write('\n<tr>')
             f.write('\n<td colspan="4" align="right" class="week-total"><strong>TOTAL DUE FOR WEEK {}</strong></td>'.format(i+1))
-            f.write('\n<td class="total"><strong>&pound{}</strong></td>'.format(weekly_total[i]))
+            f.write('\n<td class="total"><strong>&pound{0:.2f}</strong></td>'.format(weekly_total[i]))
             f.write('\n')
             i += 1
 
@@ -101,7 +101,7 @@ def createPDF(month_lessons, weekly_total):
                'user_email': user_settings["user_email"],
                'account_no': user_settings["account_no"],
                'sort_code': user_settings["sort_code"],
-               'monthly_total': sum(weekly_total)
+               'monthly_total': "{0:.2f}".format(sum(weekly_total))
     }
 
     template_loader = jinja2.FileSystemLoader('./')
