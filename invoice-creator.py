@@ -47,7 +47,7 @@ def main():
         
         for day in week:
             week_total += day[3]
-            day[3] = "£{}".format(day[3])
+            day[3] = "&pound{}".format(day[3])
 
         print("\nWeek {}".format(month_lessons.index(week)+1))
         print(tabulate(week, headers=headers, tablefmt='grid'))
@@ -55,17 +55,17 @@ def main():
         df = pd.DataFrame(week, columns=headers)
         
         weekly_total.append(week_total)
-        print("Total earned in Week {0}: £{1}".format(month_lessons.index(week)+1, week_total))
+        print("Total earned in Week {0}: &pound{1}".format(month_lessons.index(week)+1, week_total))
 
         with open('invoice.md', 'a') as f:
-            f.write('\n### Week {0} - Total earned: £{1}\n'.format(month_lessons.index(week)+1, week_total))
+            f.write('\n### Week {0} - Total earned: &pound{1}\n'.format(month_lessons.index(week)+1, week_total))
             df.to_markdown(f, index=False)
             f.write('\n\n')      
 
-    print("\nTotal earned in {0} {1}: £{2}".format(calendar.month_name[month], year, sum(weekly_total)))
+    print("\nTotal earned in {0} {1}: &pound{2}".format(calendar.month_name[month], year, sum(weekly_total)))
 
     with open('invoice.md', 'a') as f:
-        f.write('\n### Total earned in {0} {1}: £{2}'.format(calendar.month_name[month], year, sum(weekly_total)))
+        f.write('\n### Total earned in {0} {1}: &pound{2}'.format(calendar.month_name[month], year, sum(weekly_total)))
 
     return month_lessons, weekly_total
 
@@ -83,9 +83,9 @@ def createPDF(month_lessons, weekly_total):
                 f.write('\n<tr>')
                 f.write('\n<td>{}</td>'.format(day[0]))
                 f.write('\n<td>{}</td>'.format(day[1]))
-                f.write('\n<td>{}</td>'.format(day[2]))
                 f.write('<td>&pound20</td>')
-                f.write('\n<td>{}</td>'.format(day[3]))
+                f.write('\n<td>{}</td>'.format(day[2]))
+                f.write('\n<td class="bold">{}</td>'.format(day[3]))
                 f.write('\n</tr>')
 
             f.write('\n<tr>')
