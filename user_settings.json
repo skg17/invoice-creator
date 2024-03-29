@@ -4,6 +4,7 @@
     "address_line1" : "Street",
     "address_line2" : "Town",
     "address_line3" : "Postcode",
+    "control_str" : "Control string",
     "hourly_rate" : 20,
     "client_name" : "Company",
     "account_no" : "Bank account no.",
