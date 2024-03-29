@@ -89,8 +89,8 @@ def createPDF(month_lessons, weekly_total):
                 f.write('\n</tr>')
 
             f.write('\n<tr>')
-            f.write('\n<td colspan="4" align="right"><strong>Total Earned for Week {}</strong></td>'.format(i+1))
-            f.write('\n<td><strong>&pound{}</strong></td>'.format(weekly_total[i]))
+            f.write('\n<td colspan="4" align="right" class="week-total"><strong>TOTAL DUE FOR WEEK {}</strong></td>'.format(i+1))
+            f.write('\n<td class="total"><strong>&pound{}</strong></td>'.format(weekly_total[i]))
             f.write('\n</tr>')
             i += 1
 
