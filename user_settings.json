@@ -1,0 +1,11 @@
+{
+    "user_name" : "Name Surname",
+    "user_email" : "Email",
+    "address_line1" : "Street",
+    "address_line2" : "Town",
+    "address_line3" : "Postcode",
+    "hourly_rate" : 20,
+    "client_name" : "Company",
+    "account_no" : "Bank account no.",
+    "sort_code" : "Bank sort code"
+}
