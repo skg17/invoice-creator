@@ -74,16 +74,18 @@ def createPDF(month_lessons, weekly_total):
 
     head = open('head.html', 'r')
     tail = open('tail.html', 'r')
+    new_table = open('new_table.html', 'r').read()
 
     with open('invoice.html', 'a') as f:
         f.write(head.read())
         
         for week in month_lessons:
+            f.write(new_table)
             for day in week:
                 f.write('\n<tr>')
                 f.write('\n<td>{}</td>'.format(day[0]))
                 f.write('\n<td>{}</td>'.format(day[1]))
-                f.write('<td>&pound20</td>')
+                f.write('\n<td>&pound20</td>')
                 f.write('\n<td>{}</td>'.format(day[2]))
                 f.write('\n<td class="bold">{}</td>'.format(day[3]))
                 f.write('\n</tr>')
@@ -91,9 +93,10 @@ def createPDF(month_lessons, weekly_total):
             f.write('\n<tr>')
             f.write('\n<td colspan="4" align="right" class="week-total"><strong>TOTAL DUE FOR WEEK {}</strong></td>'.format(i+1))
             f.write('\n<td class="total"><strong>&pound{}</strong></td>'.format(weekly_total[i]))
-            f.write('\n</tr>')
+            f.write('\n')
             i += 1
 
+        f.write('\n')
         f.write(tail.read())
 
     today_date = datetime.datetime.today().strftime("%d %b, %Y")
