@@ -6,9 +6,10 @@ import json
 from tabulate import tabulate
 from quickstart import get_lessons_info
 
-def main():
-    month = datetime.datetime.now().month
-    year = datetime.datetime.now().year
+def get_lessons(month=None, year=None):
+    if month is None and year is None:
+        month = datetime.datetime.now().month
+        year = datetime.datetime.now().year
 
     user_settings = json.load(open('user_settings.json'))
 
@@ -51,7 +52,7 @@ def main():
         print(tabulate(week, headers=headers, tablefmt='grid'))
         
         weekly_total.append(week_total)
-        print("Total earned in Week {0}: £{1:2f}".format(month_lessons.index(week)+1, week_total))
+        print("Total earned in Week {0}: £{1:.2f}".format(month_lessons.index(week)+1, week_total))
 
     print("\nTotal earned in {0} {1}: £{2:.2f}".format(calendar.month_name[month], year, sum(weekly_total)))
 
@@ -116,5 +117,5 @@ def createPDF(month_lessons, weekly_total):
     pdfkit.from_string(output_text, output_pdf, configuration=config, css='invoice.css')
 
 if __name__ == "__main__":
-  month_lessons, weekly_total = main()
+  month_lessons, weekly_total = get_lessons()
   createPDF(month_lessons, weekly_total)
