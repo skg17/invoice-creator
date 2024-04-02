@@ -3,12 +3,13 @@ import calendar
 import jinja2
 import pdfkit
 import json
-from tabulate import tabulate
 from quickstart import get_lessons_info
 
 def get_lessons(month=None, year=None):
-    if month is None and year is None:
+    if month is None:
         month = datetime.datetime.now().month
+
+    if year is None:
         year = datetime.datetime.now().year
 
     user_settings = json.load(open('user_settings.json'))
@@ -47,9 +48,6 @@ def get_lessons(month=None, year=None):
         for day in week:
             week_total += day[3]
             day[3] = "&pound{0:.2f}".format(day[3])
-
-        print("\nWeek {}".format(month_lessons.index(week)+1))
-        print(tabulate(week, headers=headers, tablefmt='grid'))
         
         weekly_total.append(week_total)
         print("Total earned in Week {0}: £{1:.2f}".format(month_lessons.index(week)+1, week_total))
@@ -117,5 +115,5 @@ def createPDF(month_lessons, weekly_total):
     pdfkit.from_string(output_text, output_pdf, configuration=config, css='invoice.css')
 
 if __name__ == "__main__":
-  month_lessons, weekly_total = get_lessons()
+  month_lessons, weekly_total = get_lessons(month=3)
   createPDF(month_lessons, weekly_total)
