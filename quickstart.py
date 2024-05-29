@@ -51,10 +51,8 @@ def get_lessons_info(month, year, control_str = ""):
     service = build("calendar", "v3", credentials=creds)
 
     # Call the Calendar API
-    _, days = calendar.monthrange(year, month)
-
     start = datetime.datetime(year, month, 1).isoformat() + "Z"
-    end = datetime.datetime(year, month, days).isoformat() + "Z"
+    end = datetime.datetime(year, month+1, 1).isoformat() + "Z"
 
     lessons_info = []
 

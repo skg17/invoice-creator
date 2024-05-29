@@ -6,10 +6,10 @@ import json
 from quickstart import get_lessons_info
 
 def get_lessons(month=None, year=None):
-    if month is None:
+    if not month:
         month = datetime.datetime.now().month
 
-    if year is None:
+    if not year:
         year = datetime.datetime.now().year
 
     user_settings = json.load(open('user_settings.json'))
@@ -115,5 +115,5 @@ def createPDF(month_lessons, weekly_total):
     pdfkit.from_string(output_text, output_pdf, configuration=config, css='invoice.css')
 
 if __name__ == "__main__":
-  month_lessons, weekly_total = get_lessons(month=3)
+  month_lessons, weekly_total = get_lessons()
   createPDF(month_lessons, weekly_total)
