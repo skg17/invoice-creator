@@ -198,4 +198,4 @@ def createPDF(month_lessons, weekly_total):
 
     config = pdfkit.configuration(wkhtmltopdf='')
     output_pdf = 'invoice.pdf'
-    pdfkit.from_string(output_text, output_pdf, configuration=config, css='static/css/invoice.css')
+    pdfkit.from_string(output_text, output_pdf, configuration=config, css='static/css/invoice_styles.css')
