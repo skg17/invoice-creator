@@ -59,9 +59,9 @@ def get_lessons(month=None, year=None):
 def createPDF(month_lessons, weekly_total):
     i = 0
 
-    head = open('head.html', 'r')
-    tail = open('tail.html', 'r')
-    new_table = open('new_table.html', 'r').read()
+    head = open('templates/head.html', 'r')
+    tail = open('templates/tail.html', 'r')
+    new_table = open('templates/new_table.html', 'r').read()
     user_settings = json.load(open('user_settings.json'))
 
     with open('invoice.html', 'a') as f:
@@ -112,7 +112,7 @@ def createPDF(month_lessons, weekly_total):
 
     config = pdfkit.configuration(wkhtmltopdf='')
     output_pdf = 'invoice.pdf'
-    pdfkit.from_string(output_text, output_pdf, configuration=config, css='invoice.css')
+    pdfkit.from_string(output_text, output_pdf, configuration=config, css='static/css/invoice.css')
 
 if __name__ == "__main__":
   month_lessons, weekly_total = get_lessons()
