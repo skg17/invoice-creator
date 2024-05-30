@@ -16,7 +16,7 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 
-def get_lessons_info(month, year, control_str = ""):
+def get_lessons_info(month, year):
   """
   Returns a list containing different info partaining to the lessons
   taught in a given month/year.
@@ -70,6 +70,8 @@ def get_lessons_info(month, year, control_str = ""):
     )
     events = events_result.get("items", [])
 
+    control_str = get_user_settings()["control_str"]
+
     # Gather data for list
     for event in events:
       if control_str in event["summary"]:
@@ -94,19 +96,32 @@ def get_lessons_info(month, year, control_str = ""):
   except HttpError as error:
     print(f"An error occurred: {error}")
 
+def get_user_settings():
+  if os.path.isfile('user_settings.json'):
+    user_settings = json.load(open('user_settings.json', 'r'))
+
+  else:
+    required_settings = ["full_name", "email",
+                         "address", "town",
+                         "postcode", "control_str",
+                         "hourly_rate", "account_no", "sort_code"]
+    
+    user_settings = {}
+    
+    for key in required_settings:
+       user_settings[key] = input("Please enter {}: ".format(key))
+
+    with open('user_settings.json', 'w') as outfile:
+       json.dump(user_settings, outfile)
+
+  return user_settings
+
 def get_lessons(month=None, year=None):
-    if not month:
-        month = datetime.datetime.now().month
+    month = month if month else datetime.datetime.now().month
+    year = year if year else datetime.datetime.now().year
 
-    if not year:
-        year = datetime.datetime.now().year
-
-    user_settings = json.load(open('user_settings.json'))
-
-    control_str = user_settings["control_str"]
-    hourly_rate = user_settings["hourly_rate"]
-
-    lessons_info = get_lessons_info(month, year, control_str)
+    lessons_info = get_lessons_info(month, year)
+    hourly_rate = int(get_user_settings()["hourly_rate"])
 
     for i in range(len(lessons_info)):
         lessons_info[i].append(hourly_rate * lessons_info[i][2])
@@ -114,8 +129,6 @@ def get_lessons(month=None, year=None):
         lessons_info[i][0] = lessons_info[i][0].strftime('%d/%m/%Y')
 
     lessons_info.sort()
-
-    headers = ["Date", "Student", "Hrs", "Earned", "Weekday"]
 
     week = []
     month_lessons = []
@@ -148,7 +161,7 @@ def createPDF(month_lessons, weekly_total):
     head = open('templates/head.html', 'r')
     tail = open('templates/tail.html', 'r')
     new_table = open('templates/new_table.html', 'r').read()
-    user_settings = json.load(open('user_settings.json'))
+    user_settings = get_user_settings()
 
     with open('invoice.html', 'a') as f:
         f.write(head.read())
@@ -159,7 +172,7 @@ def createPDF(month_lessons, weekly_total):
                 f.write('\n<tr>')
                 f.write('\n<td>{}</td>'.format(day[0]))
                 f.write('\n<td>{}</td>'.format(day[1]))
-                f.write('\n<td>&pound{0:.2f}</td>'.format(user_settings["hourly_rate"]))
+                f.write('\n<td>&pound{0:.2f}</td>'.format(int(user_settings["hourly_rate"])))
                 f.write('\n<td>{}</td>'.format(day[2]))
                 f.write('\n<td class="bold">{}</td>'.format(day[3]))
                 f.write('\n</tr>')
@@ -175,15 +188,14 @@ def createPDF(month_lessons, weekly_total):
 
     today_date = datetime.datetime.today().strftime("%d %b, %Y")
     _, month, year = month_lessons[0][0][0].split('/')
-    invoice_no = year + month
 
-    context = {'client_name': user_settings['client_name'],
-               'address_line1': user_settings['address_line1'],
-               'address_line2': user_settings['address_line2'],
+    context = {'client_name': user_settings['full_name'].title(),
+               'address_line1': user_settings['address'].title(),
+               'address_line2': user_settings['town'].title(),
                'invoice_date': today_date,
-               'address_line3': user_settings['address_line3'],
-               'invoice_no': invoice_no,
-               'user_email': user_settings["user_email"],
+               'address_line3': user_settings['postcode'].upper(),
+               'invoice_no': year + month,
+               'user_email': user_settings["email"],
                'account_no': user_settings["account_no"],
                'sort_code': user_settings["sort_code"],
                'monthly_total': "{0:.2f}".format(sum(weekly_total))
