@@ -109,7 +109,7 @@ def get_user_settings():
     user_settings = {}
     
     for key in required_settings:
-       user_settings[key] = input("Please enter {}: ".format(key))
+       user_settings[key] = input("Please enter {}: ".format(" ".join(key.split('_'))))
 
     with open('user_settings.json', 'w') as outfile:
        json.dump(user_settings, outfile)
