@@ -139,7 +139,7 @@ def get_lessons(month=None, year=None):
         elif i == len(lessons_info)-1:
             month_lessons.append(week)
 
-    weekly_total = []
+    weekly_totals = []
 
     for week in month_lessons:
         week_total = 0
@@ -148,9 +148,9 @@ def get_lessons(month=None, year=None):
             week_total += day[3]
             day[3] = "&pound{0:.2f}".format(day[3])
         
-        weekly_total.append(week_total)
+        weekly_totals.append(week_total)
 
-    return month_lessons, weekly_total
+    return month_lessons, weekly_totals
 
 def get_student_name(control_str, event):
   if control_str in event["summary"]:
@@ -162,59 +162,62 @@ def get_student_name(control_str, event):
 
   return student
 
-def createPDF(month_lessons, weekly_total):
-    i = 0
+def create_html(month_lessons, weekly_totals):
+  i = 0
 
-    head = open('templates/head.html', 'r')
-    tail = open('templates/tail.html', 'r')
-    new_table = open('templates/new_table.html', 'r').read()
-    user_settings = get_user_settings()
+  head = open('templates/head.html', 'r')
+  tail = open('templates/tail.html', 'r')
+  new_table = open('templates/new_table.html', 'r').read()
+  hourly_rate = get_user_settings()["hourly_rate"]
 
-    with open('invoice.html', 'a') as f:
-        f.write(head.read())
-        
-        for week in month_lessons:
-            f.write(new_table)
-            for day in week:
-                f.write('\n<tr>')
-                f.write('\n<td>{}</td>'.format(day[0]))
-                f.write('\n<td>{}</td>'.format(day[1]))
-                f.write('\n<td>&pound{0:.2f}</td>'.format(int(user_settings["hourly_rate"])))
-                f.write('\n<td>{}</td>'.format(day[2]))
-                f.write('\n<td class="bold">{}</td>'.format(day[3]))
-                f.write('\n</tr>')
+  with open('invoice.html', 'a') as f:
+      f.write(head.read())
+      
+      for week in month_lessons:
+          f.write(new_table)
+          for day in week:
+              f.write('\n<tr>')
+              f.write('\n<td>{}</td>'.format(day[0]))
+              f.write('\n<td>{}</td>'.format(day[1]))
+              f.write('\n<td>&pound{0:.2f}</td>'.format(int(hourly_rate)))
+              f.write('\n<td>{}</td>'.format(day[2]))
+              f.write('\n<td class="bold">{}</td>'.format(day[3]))
+              f.write('\n</tr>')
 
-            f.write('\n<tr>')
-            f.write('\n<td colspan="4" align="right" class="week-total"><strong>TOTAL DUE FOR WEEK {}</strong></td>'.format(i+1))
-            f.write('\n<td class="total"><strong>&pound{0:.2f}</strong></td>'.format(weekly_total[i]))
-            f.write('\n')
-            i += 1
+          f.write('\n<tr>')
+          f.write('\n<td colspan="4" align="right" class="week-total"><strong>TOTAL DUE FOR WEEK {}</strong></td>'.format(i+1))
+          f.write('\n<td class="total"><strong>&pound{0:.2f}</strong></td>'.format(weekly_totals[i]))
+          f.write('\n')
+          i += 1
 
-        f.write('\n')
-        f.write(tail.read())
+      f.write('\n')
+      f.write(tail.read())
 
-    today_date = datetime.datetime.today().strftime("%d %b, %Y")
-    _, month, year = month_lessons[0][0][0].split('/')
+def createPDF(month_lessons, weekly_totals):
+  user_settings = get_user_settings()
+  _, month, year = month_lessons[0][0][0].split('/')
 
-    context = {'client_name': user_settings['full_name'].title(),
-               'address_line1': user_settings['address'].title(),
-               'address_line2': user_settings['town'].title(),
-               'invoice_date': today_date,
-               'address_line3': user_settings['postcode'].upper(),
-               'invoice_no': year + month,
-               'user_email': user_settings["email"],
-               'account_no': user_settings["account_no"],
-               'sort_code': user_settings["sort_code"],
-               'monthly_total': "{0:.2f}".format(sum(weekly_total))
-    }
+  create_html(month_lessons, weekly_totals)
 
-    template_loader = jinja2.FileSystemLoader('./')
-    template_env = jinja2.Environment(loader=template_loader)
+  context = {'client_name': user_settings['full_name'].title(),
+              'address_line1': user_settings['address'].title(),
+              'address_line2': user_settings['town'].title(),
+              'invoice_date': datetime.datetime.today().strftime("%d %b %Y"),
+              'address_line3': user_settings['postcode'].upper(),
+              'invoice_no': year + month,
+              'user_email': user_settings["email"],
+              'account_no': user_settings["account_no"],
+              'sort_code': user_settings["sort_code"],
+              'monthly_total': "{0:.2f}".format(sum(weekly_totals))
+  }
 
-    html_template = 'invoice.html'
-    template = template_env.get_template(html_template)
-    output_text = template.render(context)
+  template_loader = jinja2.FileSystemLoader('./')
+  template_env = jinja2.Environment(loader=template_loader)
 
-    config = pdfkit.configuration(wkhtmltopdf='')
-    output_pdf = 'invoice.pdf'
-    pdfkit.from_string(output_text, output_pdf, configuration=config, css='static/css/invoice_styles.css')
+  html_template = 'invoice.html'
+  template = template_env.get_template(html_template)
+  output_text = template.render(context)
+
+  config = pdfkit.configuration(wkhtmltopdf='')
+  output_pdf = 'invoice.pdf'
+  pdfkit.from_string(output_text, output_pdf, configuration=config, css='static/css/invoice_styles.css')
