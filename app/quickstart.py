@@ -74,13 +74,8 @@ def get_lessons_info(month, year):
 
     # Gather data for list
     for event in events:
-      if control_str in event["summary"]:
-        # Get student name from event summary
-        stripped_str = event["summary"][len(control_str):]
-        student, *_ = stripped_str.split(" ")
-
-      else:
-        student, *_ = event["summary"].split(" ")
+      # Get student name
+      student = get_student_name(control_str, event)
         
       # Get lesson date, time and duration
       start = event["start"].get("dateTime", event["start"].get("date"))
@@ -156,6 +151,16 @@ def get_lessons(month=None, year=None):
         weekly_total.append(week_total)
 
     return month_lessons, weekly_total
+
+def get_student_name(control_str, event):
+  if control_str in event["summary"]:
+    stripped_str = event["summary"][len(control_str):]
+    student, *_ = stripped_str.split(" ")
+
+  else:
+    student, *_ = event["summary"].split(" ")
+
+  return student
 
 def createPDF(month_lessons, weekly_total):
     i = 0
