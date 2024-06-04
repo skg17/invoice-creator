@@ -77,19 +77,21 @@ def get_lessons_info(month, year):
       if control_str in event["summary"]:
         # Get student name from event summary
         stripped_str = event["summary"][len(control_str):]
-        split_str = stripped_str.split(" ")
-        student = split_str[0]
+        student, *_ = stripped_str.split(" ")
+
+      else:
+        student, *_ = event["summary"].split(" ")
         
-        # Get lesson date, time and duration
-        start = event["start"].get("dateTime", event["start"].get("date"))
-        start = datetime.datetime.fromisoformat(start)
-        end = event["end"].get("dateTime", event["end"].get("date"))
-        end = datetime.datetime.fromisoformat(end)
+      # Get lesson date, time and duration
+      start = event["start"].get("dateTime", event["start"].get("date"))
+      start = datetime.datetime.fromisoformat(start)
+      end = event["end"].get("dateTime", event["end"].get("date"))
+      end = datetime.datetime.fromisoformat(end)
 
-        duration = end.time().hour - start.time().hour + (end.time().minute - start.time().minute) / 60
+      duration = end.time().hour - start.time().hour + (end.time().minute - start.time().minute) / 60
 
-        # Adds info to list 
-        lessons_info.append([start.date(), student, duration])
+      # Adds info to list 
+      lessons_info.append([start.date(), student, duration])
 
     return lessons_info
 
