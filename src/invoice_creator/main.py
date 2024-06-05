@@ -1,4 +1,4 @@
-from .quickstart import create_pdf
+from quickstart import create_pdf
 import argparse
 
 def main():
