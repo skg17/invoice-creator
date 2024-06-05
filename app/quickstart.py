@@ -148,7 +148,7 @@ def create_html(month_lessons, weekly_totals):
             invoice_file.write('\n' + tail_file.read())
 
 # Create PDF invoice
-def create_pdf(month=None, year=None):
+def create_pdf(month=None, year=None, delete_html=True):
     month = month or datetime.datetime.now().month
     year = year or datetime.datetime.now().year
     month_lessons, weekly_totals = group_lessons(month, year)
@@ -174,3 +174,8 @@ def create_pdf(month=None, year=None):
     config = pdfkit.configuration(wkhtmltopdf='')
 
     pdfkit.from_string(output_text, f"{year}{month:02}.pdf", configuration=config, css=CSS_FILE)
+
+    if delete_html:
+        os.remove(HTML_TEMPLATE_FILE)
+    else:
+        os.rename(HTML_TEMPLATE_FILE, "{year}{month:02}.html")
