@@ -15,7 +15,7 @@ SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 CREDENTIALS_FILE = "credentials.json"
 TOKEN_FILE = "token.json"
 USER_SETTINGS_FILE = 'user_settings.json'
-HTML_TEMPLATE_FILE = 'invoice.html'
+HTML_TEMPLATE_FILE = 'invoices/html/invoice.html'
 CSS_FILE = 'static/css/invoice_styles.css'
 HEAD_TEMPLATE = 'templates/head.html'
 TAIL_TEMPLATE = 'templates/tail.html'
@@ -173,9 +173,9 @@ def create_pdf(month=None, year=None, delete_html=True):
     output_text = template.render(context)
     config = pdfkit.configuration(wkhtmltopdf='')
 
-    pdfkit.from_string(output_text, f"{year}{month:02}.pdf", configuration=config, css=CSS_FILE)
+    pdfkit.from_string(output_text, f"invoices/pdf/{year}{month:02}.pdf", configuration=config, css=CSS_FILE)
 
     if delete_html:
         os.remove(HTML_TEMPLATE_FILE)
     else:
-        os.rename(HTML_TEMPLATE_FILE, "{year}{month:02}.html")
+        os.rename(HTML_TEMPLATE_FILE, f"invoices/html/{year}{month:02}.html")
