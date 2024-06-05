@@ -54,7 +54,6 @@ invoice-creator/
 │       │   └── css/
 │       │       └── invoice_styles.css
 │       ├── credentials.json
-│       ├── token.json
 │       ├── main.py
 │       └── quickstart.py
 ├── LICENSE
