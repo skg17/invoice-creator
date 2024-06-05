@@ -156,13 +156,13 @@ def create_pdf(month=None, year=None):
     create_html(month_lessons, weekly_totals)
 
     context = {
-        'client_name': USER_SETTINGS['full_name'].title(),
-        'address_line1': USER_SETTINGS['address'].title(),
-        'address_line2': USER_SETTINGS['town'].title(),
+        'full_name': USER_SETTINGS['full_name'].title(),
+        'address': USER_SETTINGS['address'].title(),
+        'town': USER_SETTINGS['town'].title(),
         'invoice_date': datetime.datetime.today().strftime("%d %b %Y"),
-        'address_line3': USER_SETTINGS['postcode'].upper(),
+        'postcode': USER_SETTINGS['postcode'].upper(),
         'invoice_no': f"{year}{month:02}",
-        'user_email': USER_SETTINGS["email"],
+        'email': USER_SETTINGS["email"],
         'account_no': USER_SETTINGS["account_no"],
         'sort_code': USER_SETTINGS["sort_code"],
         'monthly_total': f"{sum(weekly_totals):.2f}"
