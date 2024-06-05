@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "invoice-creator"
+version = "0.1.0"
+description = "A tool to generate invoices from Google Calendar events"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+dependencies = [
+    "google-auth>=2.0.0",
+    "google-auth-oauthlib>=0.4.4",
+    "google-api-python-client>=2.0.2",
+    "jinja2>=3.0.0",
+    "pdfkit>=1.0.0"
+]
+
+authors = [
+    {name = "Sahil Goonraz", email = "sahilgoonrazk@gmail.com"}
+]
+
+[project.urls]
+Homepage = "https://github.com/skg17/invoice-creator"
+Repository = "https://github.com/skg17/invoice-creator"
+Documentation = "https://github.com/skg17/invoice-creator#readme"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[project.scripts]
+invoice-creator = "invoice_creator.main:main"
