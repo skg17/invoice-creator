@@ -16,7 +16,6 @@ CREDENTIALS_FILE = "credentials.json"
 TOKEN_FILE = "token.json"
 USER_SETTINGS_FILE = 'user_settings.json'
 HTML_TEMPLATE_FILE = 'invoice.html'
-PDF_OUTPUT_FILE = 'invoice.pdf'
 CSS_FILE = 'static/css/invoice_styles.css'
 HEAD_TEMPLATE = 'templates/head.html'
 TAIL_TEMPLATE = 'templates/tail.html'
@@ -174,4 +173,4 @@ def create_pdf(month=None, year=None):
     output_text = template.render(context)
     config = pdfkit.configuration(wkhtmltopdf='')
 
-    pdfkit.from_string(output_text, PDF_OUTPUT_FILE, configuration=config, css=CSS_FILE)
+    pdfkit.from_string(output_text, f"{year}{month:02}.pdf", configuration=config, css=CSS_FILE)
