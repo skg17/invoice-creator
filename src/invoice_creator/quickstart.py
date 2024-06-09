@@ -21,6 +21,13 @@ HEAD_TEMPLATE = 'templates/head.html'
 TAIL_TEMPLATE = 'templates/tail.html'
 NEW_TABLE_TEMPLATE = 'templates/new_table.html'
 
+# Type aliases
+type Date = datetime.datetime
+
+class Lesson:
+    def __init__(self, event) -> None:
+        pass
+
 # Fetch user settings
 def get_user_settings() -> dict:
     if os.path.isfile(USER_SETTINGS_FILE):
@@ -77,11 +84,7 @@ def get_lessons_info(month: int, year: int):
         
         lessons_info = [
             [datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).date(),
-             get_student_name(control_str, event),
-             (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().hour -
-              datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().hour +
-              (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().minute -
-               datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().minute) / 60)]
+             get_student_name(control_str, event), get_duration(event)]
             for event in events
         ]
 
@@ -129,6 +132,13 @@ def get_student_name(control_str: str, event: str) -> str:
     student, *_ = stripped_str.split(" ")
 
     return student
+
+# Get lesson duration
+def get_duration(event: dict) -> Date:
+    return (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().hour - 
+            datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().hour +
+            (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().minute -
+             datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().minute) / 60)
 
 # Create HTML file for invoice
 def create_html(month_lessons: list, weekly_totals: list) -> None:
