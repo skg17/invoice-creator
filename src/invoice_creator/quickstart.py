@@ -83,8 +83,7 @@ def get_lessons_info(month: int, year: int):
         control_str = USER_SETTINGS["control_str"]
         
         lessons_info = [
-            [datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).date(),
-             get_student_name(control_str, event), get_duration(event)]
+            [get_lesson_date(event), get_student_name(control_str, event), get_duration(event)]
             for event in events
         ]
 
@@ -132,6 +131,10 @@ def get_student_name(control_str: str, event: str) -> str:
     student, *_ = stripped_str.split(" ")
 
     return student
+
+# Get lesson date
+def get_lesson_date(event: dict) -> Date:
+    return datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).date()
 
 # Get lesson duration
 def get_duration(event: dict) -> Date:
