@@ -23,10 +23,7 @@ NEW_TABLE_TEMPLATE = 'templates/new_table.html'
 
 # Type aliases
 type Date = datetime.datetime
-
-class Lesson:
-    def __init__(self, event) -> None:
-        pass
+type LessonList = list[Lesson]
 
 # Fetch user settings
 def get_user_settings() -> dict:
@@ -47,6 +44,17 @@ def get_user_settings() -> dict:
 
 USER_SETTINGS = get_user_settings()
 
+class Lesson:
+    def __init__(self, event) -> None:
+        self.date = get_lesson_date(event).strftime('%d/%m/%Y')
+        self.weekday = get_lesson_date(event).weekday()
+        self.student = get_student_name(USER_SETTINGS["control_str"], event)
+        self.duration = get_duration(event)
+        self.earned = self.duration * float(USER_SETTINGS["hourly_rate"])
+
+    def add_currency_symbol(self, currency: str = '&pound'):
+        self.earned = f"&pound{self.earned:.2f}"
+
 # Fetch Google credentials
 def get_google_credentials():
     creds = None
@@ -66,7 +74,7 @@ def get_google_credentials():
     return creds
 
 # Fetch lessons info
-def get_lessons_info(month: int, year: int):
+def get_lessons_info(month: int, year: int) -> LessonList:
     creds = get_google_credentials()
 
     try:
@@ -80,48 +88,36 @@ def get_lessons_info(month: int, year: int):
         ).execute()
 
         events = events_result.get("items", [])
-        control_str = USER_SETTINGS["control_str"]
         
-        lessons_info = [
-            [get_lesson_date(event), get_student_name(control_str, event), get_duration(event)]
-            for event in events
-        ]
-
-        return lessons_info
+        return [Lesson(event) for event in events]
     
     except HttpError as error:
         print(f"An error occurred: {error}")
         return []
 
 # Group lessons info by weeks
-def group_lessons(month: int, year: int):
+def group_lessons(month: int, year: int) -> tuple[list[LessonList], list[float]]:
     lessons_info = get_lessons_info(month, year)
-    hourly_rate = float(USER_SETTINGS["hourly_rate"])
+    lessons_info.sort(key = sorting_logic)
 
-    for lesson in lessons_info:
-        lesson.append(hourly_rate * lesson[2])
-        lesson.append(lesson[0].weekday())
-        lesson[0] = lesson[0].strftime('%d/%m/%Y')
-
-    lessons_info.sort()
+    week: LessonList = []
     month_lessons = []
-    week = []
 
     for i, lesson in enumerate(lessons_info):
         week.append(lesson)
 
-        if i != len(lessons_info) - 1 and lesson[4] > lessons_info[i + 1][4]:
+        if i != len(lessons_info) - 1 and lesson.weekday > lessons_info[i + 1].weekday:
             month_lessons.append(week)
             week = []
 
         elif i == len(lessons_info) - 1:
             month_lessons.append(week)
 
-    weekly_totals = [sum(day[3] for day in week) for week in month_lessons]
+    weekly_totals = [sum(lesson.earned for lesson in week) for week in month_lessons]
 
     for week in month_lessons:
-        for day in week:
-            day[3] = f"&pound{day[3]:.2f}"
+        for lesson in week:
+            lesson.add_currency_symbol()
 
     return month_lessons, weekly_totals
 
@@ -143,8 +139,12 @@ def get_duration(event: dict) -> Date:
             (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().minute -
              datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().minute) / 60)
 
+# Key for sort function
+def sorting_logic(lesson: Lesson) -> Date:
+    return lesson.date
+
 # Create HTML file for invoice
-def create_html(month_lessons: list, weekly_totals: list) -> None:
+def create_html(month_lessons: list[LessonList], weekly_totals: list[float]) -> None:
     hourly_rate = USER_SETTINGS["hourly_rate"]
 
     with open(HEAD_TEMPLATE, 'r') as head_file, open(TAIL_TEMPLATE, 'r') as tail_file, open(NEW_TABLE_TEMPLATE, 'r') as table_file:
@@ -155,8 +155,8 @@ def create_html(month_lessons: list, weekly_totals: list) -> None:
             for i, week in enumerate(month_lessons):
                 invoice_file.write(table_template)
 
-                for day in week:
-                    invoice_file.write(f'\n<tr><td>{day[0]}</td><td>{day[1]}</td><td>&pound{hourly_rate:.2f}</td><td>{day[2]}</td><td class="bold">{day[3]}</td></tr>')
+                for lesson in week:
+                    invoice_file.write(f'\n<tr><td>{lesson.date}</td><td>{lesson.student}</td><td>&pound{hourly_rate:.2f}</td><td>{lesson.duration}</td><td class="bold">{lesson.earned}</td></tr>')
                 invoice_file.write(f'\n<tr><td colspan="4" align="right" class="week-total"><strong>TOTAL DUE FOR WEEK {i+1}</strong></td><td class="total"><strong>&pound{weekly_totals[i]:.2f}</strong></td></tr>')
             
             invoice_file.write('\n' + tail_file.read())
