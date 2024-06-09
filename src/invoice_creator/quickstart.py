@@ -22,10 +22,11 @@ TAIL_TEMPLATE = 'templates/tail.html'
 NEW_TABLE_TEMPLATE = 'templates/new_table.html'
 
 # Fetch user settings
-def get_user_settings():
+def get_user_settings() -> dict:
     if os.path.isfile(USER_SETTINGS_FILE):
         with open(USER_SETTINGS_FILE, 'r') as file:
             user_settings = json.load(file)
+
     else:
         required_settings = ["full_name", "email", "address", "town", "postcode",
                              "control_str", "hourly_rate", "account_no", "sort_code"]
@@ -58,7 +59,7 @@ def get_google_credentials():
     return creds
 
 # Fetch lessons info
-def get_lessons_info(month, year):
+def get_lessons_info(month: int, year: int):
     creds = get_google_credentials()
 
     try:
@@ -91,7 +92,7 @@ def get_lessons_info(month, year):
         return []
 
 # Group lessons info by weeks
-def group_lessons(month, year):
+def group_lessons(month: int, year: int):
     lessons_info = get_lessons_info(month, year)
     hourly_rate = float(USER_SETTINGS["hourly_rate"])
 
@@ -123,14 +124,14 @@ def group_lessons(month, year):
     return month_lessons, weekly_totals
 
 # Get student name from event
-def get_student_name(control_str, event):
+def get_student_name(control_str: str, event: str) -> str:
     stripped_str = event["summary"].replace(control_str, "").strip()
     student, *_ = stripped_str.split(" ")
 
     return student
 
 # Create HTML file for invoice
-def create_html(month_lessons, weekly_totals):
+def create_html(month_lessons: list, weekly_totals: list) -> None:
     hourly_rate = USER_SETTINGS["hourly_rate"]
 
     with open(HEAD_TEMPLATE, 'r') as head_file, open(TAIL_TEMPLATE, 'r') as tail_file, open(NEW_TABLE_TEMPLATE, 'r') as table_file:
@@ -148,7 +149,7 @@ def create_html(month_lessons, weekly_totals):
             invoice_file.write('\n' + tail_file.read())
 
 # Create PDF invoice
-def create_pdf(month=None, year=None, delete_html=True):
+def create_pdf(month: int = None, year: int = None, delete_html: bool = True) -> None:
     month = month or datetime.datetime.now().month
     year = year or datetime.datetime.now().year
     month_lessons, weekly_totals = group_lessons(month, year)
