@@ -4,6 +4,7 @@ import json
 import calendar
 import jinja2
 import pdfkit
+from settings import get_user_settings
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -14,41 +15,16 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 CREDENTIALS_FILE = "credentials.json"
 TOKEN_FILE = "token.json"
-USER_SETTINGS_FILE = 'user_settings.json'
 HTML_TEMPLATE_FILE = 'invoices/html/invoice.html'
 CSS_FILE = 'static/css/invoice_styles.css'
 HEAD_TEMPLATE = 'templates/head.html'
 TAIL_TEMPLATE = 'templates/tail.html'
 NEW_TABLE_TEMPLATE = 'templates/new_table.html'
+USER_SETTINGS = get_user_settings()
 
 # Type aliases
 type Date = datetime.datetime
 type LessonList = list[Lesson]
-
-# Fetch user settings
-def get_user_settings() -> dict:
-    """Fetches the user settings from the 'user_settings.json' file.
-    If the user settings file does not exist, prompts the user to enter the relevant data and creates it.
-
-    :return: a dictionary containing the user settings.
-    :rtype: dict
-    """
-    if os.path.isfile(USER_SETTINGS_FILE):
-        with open(USER_SETTINGS_FILE, 'r') as file:
-            user_settings = json.load(file)
-
-    else:
-        required_settings = ["full_name", "email", "address", "town", "postcode",
-                             "control_str", "hourly_rate", "account_no", "sort_code"]
-        
-        user_settings = {key: input(f"Please enter {' '.join(key.split('_'))}: ") for key in required_settings}
-
-        with open(USER_SETTINGS_FILE, 'w') as outfile:
-            json.dump(user_settings, outfile)
-
-    return user_settings
-
-USER_SETTINGS = get_user_settings()
 
 class Lesson:
     """Class containg information relating to a lesson."""
