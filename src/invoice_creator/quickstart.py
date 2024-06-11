@@ -4,6 +4,7 @@ import json
 import calendar
 import jinja2
 import pdfkit
+from settings import get_user_settings
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -14,37 +15,51 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 CREDENTIALS_FILE = "credentials.json"
 TOKEN_FILE = "token.json"
-USER_SETTINGS_FILE = 'user_settings.json'
 HTML_TEMPLATE_FILE = 'invoices/html/invoice.html'
 CSS_FILE = 'static/css/invoice_styles.css'
 HEAD_TEMPLATE = 'templates/head.html'
 TAIL_TEMPLATE = 'templates/tail.html'
 NEW_TABLE_TEMPLATE = 'templates/new_table.html'
-
-# Fetch user settings
-def get_user_settings() -> dict:
-    if os.path.isfile(USER_SETTINGS_FILE):
-        with open(USER_SETTINGS_FILE, 'r') as file:
-            user_settings = json.load(file)
-
-    else:
-        required_settings = ["full_name", "email", "address", "town", "postcode",
-                             "control_str", "hourly_rate", "account_no", "sort_code"]
-        
-        user_settings = {key: input(f"Please enter {' '.join(key.split('_'))}: ") for key in required_settings}
-
-        with open(USER_SETTINGS_FILE, 'w') as outfile:
-            json.dump(user_settings, outfile)
-
-    return user_settings
-
 USER_SETTINGS = get_user_settings()
 
+# Type aliases
+type Date = datetime.datetime
+type LessonList = list[Lesson]
+
+class Lesson:
+    """Class containg information relating to a lesson."""
+    def __init__(self, event) -> None:
+        """Initialises lesson instance.
+
+        :param event: calendar event from which lesson info is to be extracted.
+        :type event: dict
+        """
+        self.date = get_lesson_date(event).strftime('%d/%m/%Y')
+        self.weekday = get_lesson_date(event).weekday()
+        self.student = get_student_name(USER_SETTINGS["control_str"], event)
+        self.duration = get_duration(event)
+        self.earned = self.duration * float(USER_SETTINGS["hourly_rate"])
+
+    def add_currency_symbol(self, currency: str = '&pound') -> None:
+        """Changes the 'earned' attribute from float to a str preceded by a currency symbol.
+
+        :param currency: currency symbol to be used, defaults to '&pound'
+        :type currency: str, optional
+        """
+        self.earned = f"&pound{self.earned:.2f}"
+
 # Fetch Google credentials
-def get_google_credentials():
+def get_google_credentials() -> Credentials:
+    """Fetches Google credentials required to communicate with the Google Calendar API.
+
+    :return: Google credentials.
+    :rtype: Credentials
+    """
     creds = None
+
     if os.path.exists(TOKEN_FILE):
         creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -59,7 +74,16 @@ def get_google_credentials():
     return creds
 
 # Fetch lessons info
-def get_lessons_info(month: int, year: int):
+def get_lessons_info(month: int, year: int) -> LessonList:
+    """Collects info on all the lessons in a given month and year.
+
+    :param month: specify month for which lessons are to be returned.
+    :type month: int
+    :param year: specify year for which lessons are to be returned.
+    :type year: int
+    :return: a list containing all the Lesson objects for the given month/year range.
+    :rtype: LessonList
+    """
     creds = get_google_credentials()
 
     try:
@@ -73,53 +97,47 @@ def get_lessons_info(month: int, year: int):
         ).execute()
 
         events = events_result.get("items", [])
-        control_str = USER_SETTINGS["control_str"]
         
-        lessons_info = [
-            [datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).date(),
-             get_student_name(control_str, event),
-             (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().hour -
-              datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().hour +
-              (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().minute -
-               datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().minute) / 60)]
-            for event in events
-        ]
-
-        return lessons_info
+        return [Lesson(event) for event in events]
     
     except HttpError as error:
         print(f"An error occurred: {error}")
         return []
 
 # Group lessons info by weeks
-def group_lessons(month: int, year: int):
+def group_lessons(month: int, year: int) -> tuple[list[LessonList], list[float]]:
+    """Returns all the lessons within a given month/year range grouped by week,
+    alongside a list of total weekly earnings for said weeks.
+
+    :param month: specify month for which lessons are to be returned.
+    :type month: int
+    :param year: specify year for which lessons are to be returned.
+    :type year: int
+    :returns:
+        - month_lessons (:py:class:`list[LessonList]`) - all the lessons in the month grouped by week.
+        - weekly_totals (:py:class:`list[float]`) - total earnings for each week.
+    """
     lessons_info = get_lessons_info(month, year)
-    hourly_rate = float(USER_SETTINGS["hourly_rate"])
+    lessons_info.sort(key = sorting_logic)
 
-    for lesson in lessons_info:
-        lesson.append(hourly_rate * lesson[2])
-        lesson.append(lesson[0].weekday())
-        lesson[0] = lesson[0].strftime('%d/%m/%Y')
-
-    lessons_info.sort()
-    month_lessons = []
-    week = []
+    week: LessonList = []
+    month_lessons: list[LessonList] = []
 
     for i, lesson in enumerate(lessons_info):
         week.append(lesson)
 
-        if i != len(lessons_info) - 1 and lesson[4] > lessons_info[i + 1][4]:
+        if i != len(lessons_info) - 1 and lesson.weekday > lessons_info[i + 1].weekday:
             month_lessons.append(week)
             week = []
 
         elif i == len(lessons_info) - 1:
             month_lessons.append(week)
 
-    weekly_totals = [sum(day[3] for day in week) for week in month_lessons]
+    weekly_totals = [sum(lesson.earned for lesson in week) for week in month_lessons]
 
     for week in month_lessons:
-        for day in week:
-            day[3] = f"&pound{day[3]:.2f}"
+        for lesson in week:
+            lesson.add_currency_symbol()
 
     return month_lessons, weekly_totals
 
@@ -130,8 +148,51 @@ def get_student_name(control_str: str, event: str) -> str:
 
     return student
 
+# Get lesson date
+def get_lesson_date(event: dict) -> Date:
+    """Fetches lesson date from event dictionary.
+
+    :param event: calendar event from which lesson date is to be extracted.
+    :type event: dict
+    :return: lesson date.
+    :rtype: Date
+    """
+    return datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).date()
+
+# Get lesson duration
+def get_duration(event: dict) -> Date:
+    """Fetches lesson duration from event dictionary.
+
+    :param event: calendar event from which lesson duration is to be extracted.
+    :type event: dict
+    :return: lesson duration.
+    :rtype: Date
+    """
+    return (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().hour - 
+            datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().hour +
+            (datetime.datetime.fromisoformat(event["end"].get("dateTime", event["end"].get("date"))).time().minute -
+             datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().minute) / 60)
+
+# Key for sort function
+def sorting_logic(lesson: Lesson) -> Date:
+    """Used to specify chronological sorting for `sort()` function. 
+
+    :param lesson: lesson from which date will be extracted.
+    :type lesson: Lesson
+    :return: lesson date.
+    :rtype: Date
+    """
+    return lesson.date
+
 # Create HTML file for invoice
-def create_html(month_lessons: list, weekly_totals: list) -> None:
+def create_html(month_lessons: list[LessonList], weekly_totals: list[float]) -> None:
+    """Creates an html version of the invoice using pre-set templates.
+
+    :param month_lessons: list of lessons grouped by weeks.
+    :type month_lessons: list[LessonList]
+    :param weekly_totals: list of total weekly earnings.
+    :type weekly_totals: list[float]
+    """
     hourly_rate = USER_SETTINGS["hourly_rate"]
 
     with open(HEAD_TEMPLATE, 'r') as head_file, open(TAIL_TEMPLATE, 'r') as tail_file, open(NEW_TABLE_TEMPLATE, 'r') as table_file:
@@ -142,14 +203,23 @@ def create_html(month_lessons: list, weekly_totals: list) -> None:
             for i, week in enumerate(month_lessons):
                 invoice_file.write(table_template)
 
-                for day in week:
-                    invoice_file.write(f'\n<tr><td>{day[0]}</td><td>{day[1]}</td><td>&pound{hourly_rate:.2f}</td><td>{day[2]}</td><td class="bold">{day[3]}</td></tr>')
+                for lesson in week:
+                    invoice_file.write(f'\n<tr><td>{lesson.date}</td><td>{lesson.student}</td><td>&pound{hourly_rate:.2f}</td><td>{lesson.duration}</td><td class="bold">{lesson.earned}</td></tr>')
                 invoice_file.write(f'\n<tr><td colspan="4" align="right" class="week-total"><strong>TOTAL DUE FOR WEEK {i+1}</strong></td><td class="total"><strong>&pound{weekly_totals[i]:.2f}</strong></td></tr>')
             
             invoice_file.write('\n' + tail_file.read())
 
 # Create PDF invoice
 def create_pdf(month: int = None, year: int = None, delete_html: bool = True) -> None:
+    """Creates PDF invoice using html version.
+
+    :param month: month for which invoice is to be created, defaults to None (current month).
+    :type month: int, optional
+    :param year: year for which invoice is to be created, defaults to None (current year).
+    :type year: int, optional
+    :param delete_html: toggle whether to delete html invoice, defaults to True (deletes html invoice).
+    :type delete_html: bool, optional
+    """
     month = month or datetime.datetime.now().month
     year = year or datetime.datetime.now().year
     month_lessons, weekly_totals = group_lessons(month, year)
