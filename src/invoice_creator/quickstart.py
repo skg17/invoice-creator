@@ -28,6 +28,8 @@ type LessonList = list[Lesson]
 
 class Lesson:
     """Class containg information relating to a lesson."""
+    hourly_rate = float(USER_SETTINGS["hourly_rate"])
+
     def __init__(self, event) -> None:
         """Initialises lesson instance.
 
@@ -38,7 +40,16 @@ class Lesson:
         self.weekday = get_lesson_date(event).weekday()
         self.student = get_student_name(USER_SETTINGS["control_str"], event)
         self.duration = get_duration(event)
-        self.earned = self.duration * float(USER_SETTINGS["hourly_rate"])
+        self.earned = self.duration * self.hourly_rate
+
+    def __repr__(self) -> str:
+        return f'{self.date}: {self.student}, {self.earned} ({self.duration} @ {self.hourly_rate})'
+    
+    def __str__(self) -> str:
+        return f'\n{'Lesson date:':<12} {datetime.datetime.strptime(self.date, '%d/%m/%Y').strftime('%a %d %b %y'):>20} \
+                \n{'Student:':<12} {self.student:>20} \
+                \n{'Duration:':<12} {f"{self.duration}hrs (@ {self.hourly_rate}/hr)":>20} \
+                \n{'Earned:':<12} {self.earned:>20}'
 
     def add_currency_symbol(self, currency: str = '&pound') -> None:
         """Changes the 'earned' attribute from float to a str preceded by a currency symbol.
