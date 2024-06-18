@@ -23,7 +23,7 @@ NEW_TABLE_TEMPLATE = 'templates/new_table.html'
 USER_SETTINGS = get_user_settings()
 
 # Type aliases
-type Date = datetime.datetime
+type Date = datetime.date
 type LessonList = list[Lesson]
 
 class Lesson:
@@ -60,7 +60,7 @@ class Lesson:
         self.earned = f"&pound{self.earned:.2f}"
 
 # Fetch Google credentials
-def get_google_credentials() -> Credentials:
+def get_google_credentials():
     """Fetches Google credentials required to communicate with the Google Calendar API.
 
     :return: Google credentials.
@@ -144,6 +144,7 @@ def group_lessons(month: int, year: int) -> tuple[list[LessonList], list[float]]
         elif i == len(lessons_info) - 1:
             month_lessons.append(week)
 
+    # TODO: Fix sum overloads; possibly by creating Week class to handle weekly total calculations
     weekly_totals = [sum(lesson.earned for lesson in week) for week in month_lessons]
 
     for week in month_lessons:
@@ -153,7 +154,7 @@ def group_lessons(month: int, year: int) -> tuple[list[LessonList], list[float]]
     return month_lessons, weekly_totals
 
 # Get student name from event
-def get_student_name(control_str: str, event: str) -> str:
+def get_student_name(control_str: str, event: dict) -> str:
     stripped_str = event["summary"].replace(control_str, "").strip()
     student, *_ = stripped_str.split(" ")
 
@@ -171,7 +172,7 @@ def get_lesson_date(event: dict) -> Date:
     return datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).date()
 
 # Get lesson duration
-def get_duration(event: dict) -> Date:
+def get_duration(event: dict) -> float:
     """Fetches lesson duration from event dictionary.
 
     :param event: calendar event from which lesson duration is to be extracted.
@@ -185,7 +186,7 @@ def get_duration(event: dict) -> Date:
              datetime.datetime.fromisoformat(event["start"].get("dateTime", event["start"].get("date"))).time().minute) / 60)
 
 # Key for sort function
-def sorting_logic(lesson: Lesson) -> Date:
+def sorting_logic(lesson: Lesson) -> str:
     """Used to specify chronological sorting for `sort()` function. 
 
     :param lesson: lesson from which date will be extracted.
@@ -221,7 +222,7 @@ def create_html(month_lessons: list[LessonList], weekly_totals: list[float]) -> 
             invoice_file.write('\n' + tail_file.read())
 
 # Create PDF invoice
-def create_pdf(month: int = None, year: int = None, delete_html: bool = True) -> None:
+def create_pdf(month: int = 0, year: int = 0, delete_html: bool = True) -> None:
     """Creates PDF invoice using html version.
 
     :param month: month for which invoice is to be created, defaults to None (current month).
