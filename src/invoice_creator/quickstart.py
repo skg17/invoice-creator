@@ -27,7 +27,7 @@ type Date = datetime.date
 type LessonList = list[Lesson]
 
 class Lesson:
-    """Class containg information relating to a lesson."""
+    """Class containing information relating to a lesson."""
     hourly_rate = float(USER_SETTINGS["hourly_rate"])
 
     def __init__(self, event) -> None:
@@ -100,7 +100,7 @@ def get_lessons_info(month: int, year: int) -> LessonList:
     try:
         service = build("calendar", "v3", credentials=creds)
         time_min = datetime.datetime(year, month, 1).isoformat() + "Z"
-        time_max = datetime.datetime(year, month + 1, 1).isoformat() + "Z"
+        time_max = datetime.datetime(year + 1 if month == 12 else year, month + 1 if month < 12 else 1, 1).isoformat() + "Z"
 
         events_result = service.events().list(
             calendarId="primary", timeMin=time_min, timeMax=time_max, maxResults=1000, singleEvents=True,
@@ -137,14 +137,14 @@ def group_lessons(month: int, year: int) -> tuple[list[LessonList], list[float]]
     for i, lesson in enumerate(lessons_info):
         week.append(lesson)
 
-        if i != len(lessons_info) - 1 and lesson.weekday > lessons_info[i + 1].weekday:
-            month_lessons.append(week)
-            week = []
-
-        elif i == len(lessons_info) - 1:
+        if i == len(lessons_info) - 1:
             month_lessons.append(week)
 
-    # TODO: Fix sum overloads; possibly by creating Week class to handle weekly total calculations
+        elif (i != len(lessons_info) - 1 and lesson.weekday > lessons_info[i + 1].weekday) or (int(lessons_info[i + 1].date.split('/')[0]) >= int(lesson.date.split('/')[0]) + 7):
+            month_lessons.append(week)
+            week = []    
+
+    # TODO: Fix sum overloads; possibly by creating Week class to handle weekly total
     weekly_totals = [sum(lesson.earned for lesson in week) for week in month_lessons]
 
     for week in month_lessons:
@@ -222,7 +222,7 @@ def create_html(month_lessons: list[LessonList], weekly_totals: list[float]) -> 
             invoice_file.write('\n' + tail_file.read())
 
 # Create PDF invoice
-def create_pdf(month: int = 0, year: int = 0, delete_html: bool = True) -> None:
+def create_pdf(month: int = datetime.datetime.now().month, year: int = datetime.datetime.now().year, delete_html: bool = True) -> None:
     """Creates PDF invoice using html version.
 
     :param month: month for which invoice is to be created, defaults to None (current month).
@@ -232,8 +232,7 @@ def create_pdf(month: int = 0, year: int = 0, delete_html: bool = True) -> None:
     :param delete_html: toggle whether to delete html invoice, defaults to True (deletes html invoice).
     :type delete_html: bool, optional
     """
-    month = month or datetime.datetime.now().month
-    year = year or datetime.datetime.now().year
+
     month_lessons, weekly_totals = group_lessons(month, year)
     create_html(month_lessons, weekly_totals)
 
