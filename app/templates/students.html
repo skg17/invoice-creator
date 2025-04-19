@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Manage Students</title></head>
+  <body>
+    <h1>Manage Students</h1>
+    {% for id, name, level, year, exam_board, target_grade, subject, active in students %}
+      <form method="post">
+        <input type="hidden" name="id" value="{{ id }}">
+        <label>Name: {{ name }}</label><br>
+        <label>Level: <input name="level" value="{{ level or '' }}"></label><br>
+        <label>Year: <input name="year" value="{{ year or '' }}"></label><br>
+        <label>Exam Board: <input name="exam_board" value="{{ exam_board or '' }}"></label><br>
+        <label>Target Grade: <input name="target_grade" value="{{ target_grade or '' }}"></label><br>
+        <label>Subject: <input name="subject" value="{{ subject or '' }}"></label><br>
+        <label>Active: <input type="checkbox" name="active" {% if active %}checked{% endif %}></label><br>
+        <button type="submit">Save</button>
+      </form>
+      <hr>
+    {% endfor %}
+    <a href="{{ url_for('index') }}">Back to dashboard</a>
+  </body>
+</html>

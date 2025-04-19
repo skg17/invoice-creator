@@ -47,6 +47,9 @@
       {% endif %}
     {% endwith %}
     <h1>Invoice Creator</h1>
+    <nav>
+      <a href="{{ url_for('manage_students') }}">Manage Students</a>
+    </nav>
 
     <!-- Existing buttons -->
     <form action="{{ url_for('create_invoice') }}" method="get">
@@ -79,7 +82,8 @@
           const m = document.getElementById('month-input').value.padStart(2, '0');
           // redirect to your custom route
           window.location.href = `/create-invoice-custom/${y}/${m}`;
-        });    </script>
+        });
+    </script>
     <div class="upcoming-lessons">
       <h2>Upcoming Lessons</h2>
       {% if upcoming_lessons %}

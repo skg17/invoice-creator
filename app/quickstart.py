@@ -71,7 +71,8 @@ def init_db():
             year TEXT,
             exam_board TEXT,
             target_grade TEXT,
-            subject TEXT
+            subject TEXT,
+            active INTEGER NOT NULL DEFAULT 1
         )
     ''')
     # Add student_id FK to lessons if missing
@@ -81,6 +82,24 @@ def init_db():
         c.execute("ALTER TABLE lessons ADD COLUMN student_id INTEGER")
     # Ensure SQLite enforces FKs
     c.execute("PRAGMA foreign_keys = ON")
+    # Add active column to students if missing
+    c.execute("PRAGMA table_info(students)")
+    stu_cols = [row[1] for row in c.fetchall()]
+    if 'active' not in stu_cols:
+        c.execute("ALTER TABLE students ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
+
+    # Update active status: mark students with a lesson in the last year as active, others inactive
+    one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
+    c.execute('''
+        UPDATE students
+        SET active = CASE
+            WHEN EXISTS (
+                SELECT 1 FROM lessons
+                WHERE lessons.student_id = students.id AND date >= ?
+            ) THEN 1
+            ELSE 0
+        END
+    ''', (one_year_ago.isoformat(),))
     conn.commit()
     conn.close()
 

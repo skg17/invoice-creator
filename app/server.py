@@ -6,7 +6,8 @@ import datetime
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = 'supersecretkey'
-TEMPLATE = 'index.html'
+DASHBOARD = 'index.html'
+STUDENTS_HTML = 'students.html'
 
 @app.route("/", methods=["GET"])
 def index():
@@ -76,7 +77,7 @@ def index():
     # Pass data to template
     earnings_data_json = json.dumps(earnings_data)
     return render_template(
-        TEMPLATE,
+        DASHBOARD,
         earnings_data_json=earnings_data_json,
         available_years=available_years,
         selected_years=selected_years,
@@ -100,6 +101,36 @@ def create_invoice_custom(year: int, month: int):
     create_pdf(month, year)
     flash(f"Invoice for {year}-{month:02} has been created successfully.")
     return redirect(url_for("index"))
+
+@app.route("/students", methods=["GET", "POST"])
+def manage_students():
+    """View and edit student properties."""
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    if request.method == "POST":
+        student_id = int(request.form["id"])
+        level = request.form.get("level")
+        year = request.form.get("year")
+        exam_board = request.form.get("exam_board")
+        target_grade = request.form.get("target_grade")
+        subject = request.form.get("subject")
+        active = 1 if request.form.get("active") == "on" else 0
+        c.execute("""
+            UPDATE students
+            SET level=?, year=?, exam_board=?, target_grade=?, subject=?, active=?
+            WHERE id=?
+        """, (level, year, exam_board, target_grade, subject, active, student_id))
+        conn.commit()
+        flash("Student updated successfully.")
+        return redirect(url_for("manage_students"))
+    # GET: fetch all students
+    c.execute("""
+        SELECT id, name, level, year, exam_board, target_grade, subject, active
+        FROM students
+    """)
+    students = c.fetchall()
+    conn.close()
+    return render_template(STUDENTS_HTML, students=students)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)
