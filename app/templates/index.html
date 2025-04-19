@@ -84,9 +84,9 @@
               <div>{{ lesson.start_time }} - {{ lesson.end_time }}</div>
             </div>
             <div class="lesson-student-info" style="text-align:right;">
-              <div style="font-weight:bold; font-size:1.1em;">{{ lesson.student }}</div>
+              <div style="font-weight:bold; font-size:1.1em;">{{ lesson.student.name }}</div>
               <div style="font-size:0.9em; color:#666;">
-                {{ lesson.level }}, {{ lesson.year }}
+                {{ lesson.student.level }}, {{ lesson.student.year }} - {{ lesson.student.subject }} ({{ lesson.student.exam_board }})
               </div>
             </div>
           </div>
@@ -106,15 +106,15 @@
       <canvas id="earningsChart"></canvas>
       <div class="stats">
         <div>
-          <div><strong>&pound;{{ ytd_total }}</strong></div>
+          <div><strong>&pound;{{ "{:,.2f}".format(ytd_total) }}</strong></div>
           <div>Year-to-Date</div>
         </div>
         <div>
-          <div><strong>&pound;{{ mtd_total }}</strong></div>
+          <div><strong>&pound;{{ "{:,.2f}".format(mtd_total) }}</strong></div>
           <div>Month-to-Date</div>
         </div>
         <div>
-          <div><strong>&pound;{{ total_all }}</strong></div>
+          <div><strong>&pound;{{ "{:,.2f}".format(total_all) }}</strong></div>
           <div>Total Earnings</div>
         </div>
       </div>

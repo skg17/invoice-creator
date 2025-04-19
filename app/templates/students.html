@@ -65,6 +65,11 @@
       background: #eee;
       color: #333;
     }
+    .button-pill.delete-btn {
+      background: #dc3912;
+      color: #fff;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -132,40 +137,51 @@
         </div>
       {% for student in students %}
         <div class="card student-card">
-          <h3>{{ student[1] }}</h3>
+          <h3>{{ student.name }}</h3>
           <div class="student-details">
             <div class="label">Level</div>
             <div class="value">
-              <select name="level-{{ student[0] }}" disabled>
+              <select name="level-{{ student.id }}" disabled>
                 {% for lvl in filter_levels %}
-                  <option value="{{ lvl }}" {% if lvl == student[2] %}selected{% endif %}>{{ lvl }}</option>
+                  <option value="{{ lvl }}" {% if lvl == student.level %}selected{% endif %}>{{ lvl }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="label">Year</div>
             <div class="value">
-              <select name="year-{{ student[0] }}" disabled>
+              <select name="year-{{ student.id }}" disabled>
                 {% for yr in filter_years %}
-                  <option value="{{ yr }}" {% if yr == student[3] %}selected{% endif %}>{{ yr }}</option>
+                  <option value="{{ yr }}" {% if yr == student.year %}selected{% endif %}>{{ yr }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="label">Exam Board</div>
             <div class="value">
-              <select name="exam_board-{{ student[0] }}" disabled>
+              <select name="exam_board-{{ student.id }}" disabled>
                 {% for board in filter_boards %}
-                  <option value="{{ board }}" {% if board == student[4] %}selected{% endif %}>{{ board }}</option>
+                  <option value="{{ board }}" {% if board == student.exam_board %}selected{% endif %}>{{ board }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="label">Target Grade</div>
             <div class="value">
-              <input type="text" name="target_grade-{{ student[0] }}" value="{{ student[5] or '' }}" disabled>
+              <input type="text" name="target_grade-{{ student.id }}" value="{{ student.target_grade or '' }}" disabled>
             </div>
-            <input type="hidden" name="student_ids" value="{{ student[0] }}">
+            <div class="label">Subject</div>
+            <div class="value">
+              <input type="text" name="subject-{{ student.id }}" value="{{ student.subject or '' }}" disabled>
+            </div>
+            <input type="hidden" name="student_ids" value="{{ student.id }}">
           </div>
           <div class="active-checkbox">
-            <label><input type="checkbox" name="active-{{ student[0] }}" {% if student[7] %}checked{% endif %}> Current</label>
+            <label>Status:
+              <select name="active-{{ student.id }}" disabled>
+                {% for val, label in filter_active %}
+                  <option value="{{ val }}" {% if student.active == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <button type="submit" name="delete" value="{{ student.id }}" class="button-pill delete-btn" style="margin-top:1em; display:none;">Delete</button>
           </div>
         </div>
       {% endfor %}
@@ -180,6 +196,9 @@
       document.getElementById('save-btn').style.display = editing ? 'inline-block' : 'none';
       document.querySelectorAll('#students-form select, #students-form input[type="text"]').forEach(el => {
         el.disabled = !editing;
+      });
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.style.display = editing ? 'inline-block' : 'none';
       });
     });
   </script>

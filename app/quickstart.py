@@ -12,6 +12,23 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+class Student:
+    """Represents a student with profile data."""
+    def __init__(self, id, name, level, year, exam_board, target_grade, subject, active):
+        self.id = id
+        self.name = name
+        self.level = level
+        self.year = year
+        self.exam_board = exam_board
+        self.target_grade = target_grade
+        self.subject = subject
+        self.active = bool(active)
+
+    @classmethod
+    def from_db(cls, row):
+        # row: (id, name, level, year, exam_board, target_grade, subject, active)
+        return cls(*row)
+
 # Constants
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 CREDENTIALS_FILE = "credentials.json"
@@ -82,24 +99,44 @@ def init_db():
         c.execute("ALTER TABLE lessons ADD COLUMN student_id INTEGER")
     # Ensure SQLite enforces FKs
     c.execute("PRAGMA foreign_keys = ON")
-    # Add active column to students if missing
+    # Add active column to students if missing and initialize active flags on first migration
     c.execute("PRAGMA table_info(students)")
     stu_cols = [row[1] for row in c.fetchall()]
     if 'active' not in stu_cols:
         c.execute("ALTER TABLE students ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
+        # On first migration only: initialize active flags
+        one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
+        c.execute('''
+            UPDATE students
+            SET active = CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM lessons
+                    WHERE lessons.student_id = students.id AND date >= ?
+                ) THEN 1
+                ELSE 0
+            END
+        ''', (one_year_ago.isoformat(),))
 
-    # Update active status: mark students with a lesson in the last year as active, others inactive
-    one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
+    # Create subjects table and student_subjects link table
     c.execute('''
-        UPDATE students
-        SET active = CASE
-            WHEN EXISTS (
-                SELECT 1 FROM lessons
-                WHERE lessons.student_id = students.id AND date >= ?
-            ) THEN 1
-            ELSE 0
-        END
-    ''', (one_year_ago.isoformat(),))
+        CREATE TABLE IF NOT EXISTS subjects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS student_subjects (
+            student_id INTEGER NOT NULL REFERENCES students(id),
+            subject_id INTEGER NOT NULL REFERENCES subjects(id),
+            PRIMARY KEY (student_id, subject_id)
+        )
+    ''')
+    # Add subject_id column to lessons if missing
+    c.execute("PRAGMA table_info(lessons)")
+    lesson_cols = [row[1] for row in c.fetchall()]
+    if 'subject_id' not in lesson_cols:
+        c.execute("ALTER TABLE lessons ADD COLUMN subject_id INTEGER REFERENCES subjects(id)")
+
     conn.commit()
     conn.close()
 
@@ -205,8 +242,9 @@ def fetch_lessons(month: int, year: int):
     else:
         end_date = datetime.date(year, month + 1, 1)
     c.execute('''
-        SELECT l.date, l.weekday, s.name, s.level, s.year, s.exam_board, s.target_grade, s.subject,
-               l.duration, l.hourly_rate, l.start_time, l.end_time
+        SELECT l.date, l.weekday,
+               s.id, s.name, s.level, s.year, s.exam_board, s.target_grade, s.subject, s.active,
+               l.duration, l.hourly_rate, l.start_time, l.end_time, l.subject_id
         FROM lessons l
         JOIN students s ON l.student_id = s.id
         WHERE l.date >= ? AND l.date < ?
@@ -216,8 +254,11 @@ def fetch_lessons(month: int, year: int):
     conn.close()
 
     lessons = []
-    for date_str, weekday, student, level, year, exam_board, target_grade, subject, duration, hourly_rate, start_time, end_time in rows:
-        lesson = Lesson.from_db(date_str, weekday, student, duration, hourly_rate, start_time, end_time)
+    for (date_str, weekday,
+         stu_id, name, level, student_year, exam_board, target_grade, subject, active,
+         duration, hourly_rate, start_time, end_time, subject_id) in rows:
+        student = Student.from_db((stu_id, name, level, student_year, exam_board, target_grade, subject, active))
+        lesson = Lesson.from_db(date_str, weekday, student, duration, hourly_rate, start_time, end_time, subject_id)
         lessons.append(lesson)
     return lessons
 
@@ -239,20 +280,21 @@ class Lesson:
         self.end_time   = event["end"].get("dateTime", event["end"].get("date"))
 
     @classmethod
-    def from_db(cls, date_str, weekday, student, duration, hourly_rate, start_time, end_time):
+    def from_db(cls, date_str, weekday, student: Student, duration, hourly_rate, start_time, end_time, subject_id):
         obj = cls.__new__(cls)
         obj.date = datetime.datetime.strptime(date_str, '%Y-%m-%d').strftime('%d/%m/%Y')
         obj.weekday = weekday
-        obj.student = student
+        obj.student = student  # now a Student object
         obj.duration = duration
         obj.hourly_rate = hourly_rate
         obj.earned = duration * hourly_rate
         obj.start_time = start_time
         obj.end_time   = end_time
+        obj.subject_id = subject_id
         return obj
 
     def __repr__(self) -> str:
-        return f'{self.date}: {self.student}, {self.earned:.2f} ({self.duration}h @ {self.hourly_rate}/hr)'
+        return f'{self.date}: {self.student.name}, {self.earned:.2f} ({self.duration}h @ {self.hourly_rate}/hr)'
 
     def add_currency_symbol(self, currency: str = '&pound') -> None:
         self.earned = f"{currency}{self.earned:.2f}"
@@ -299,7 +341,7 @@ def create_html(month_lessons: list[LessonList], weekly_totals: list[float]) -> 
         for i, week in enumerate(month_lessons):
             out.write(rows)
             for lesson in week:
-                out.write(f"<tr><td>{lesson.date}</td><td>{lesson.student}</td>"
+                out.write(f"<tr><td>{lesson.date}</td><td>{lesson.student.name}</td>"
                           f"<td>&pound{hourly_rate:.2f}</td><td>{lesson.duration}</td>"
                           f"<td class='bold'>{lesson.earned}</td></tr>")
             out.write(f"<tr><td colspan='4' align='right' class='week-total'>"
