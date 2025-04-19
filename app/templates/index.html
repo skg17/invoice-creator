@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html>
-  <head><title>Invoice Creator</title></head>
+  <head>
+    <title>Invoice Creator</title>
+    <style>
+      .graph-container {
+        position: absolute;
+        top: 5vh;
+        right: 5vw;
+        width: 35vw;
+        height: 35vh;
+      }
+      .graph-container canvas {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
   <body>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
@@ -46,5 +61,41 @@
           window.location.href = `/create-invoice-custom/${y}/${m}`;
         });
     </script>
+    <div class="graph-container">
+      <h2>Year-to-Date Earnings</h2>
+      <form method="get" id="year-select-form">
+        {% for year in available_years %}
+          <label>
+            <input type="checkbox" name="year" value="{{ year }}" {% if year in selected_years %}checked{% endif %}>
+            {{ year }}
+          </label>
+        {% endfor %}
+        <button type="submit">Update Graph</button>
+      </form>
+      <canvas id="earningsChart"></canvas>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script>
+        const earningsData = {{ earnings_data_json | safe }};
+        const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const datasets = Object.entries(earningsData).map(([year, data]) => ({
+          label: year,
+          data: data,
+          fill: false,
+          borderColor: '#' + Math.floor(Math.random()*16777215).toString(16)
+        }));
+        const ctx = document.getElementById('earningsChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: { labels: labels, datasets: datasets },
+          options: {
+            responsive: true,
+            scales: {
+              y: { title: { display: true, text: 'Earnings' } },
+              x: { title: { display: true, text: 'Month' } }
+            }
+          }
+        });
+      </script>
+    </div>
   </body>
 </html>
