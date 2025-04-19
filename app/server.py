@@ -34,13 +34,53 @@ def index():
             total = sum(lesson.earned for lesson in lessons)
             monthly_totals.append(total)
         earnings_data[year] = monthly_totals
+
+    # Fetch next 5 upcoming lessons
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    today_str = now.date().isoformat()
+    c.execute(
+        "SELECT date, student, start_time, end_time FROM lessons "
+        "WHERE date >= ? ORDER BY date ASC LIMIT 5",
+        (today_str,)
+    )
+    rows = c.fetchall()
+    conn.close()
+
+    upcoming_lessons = []
+    today = now.date()
+    for date_str, student, start_str, end_str in rows:
+        # parse lesson date
+        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+        # determine relative label
+        if date_obj == today:
+            relative = "Today"
+        elif date_obj == today + datetime.timedelta(days=1):
+            relative = "Tomorrow"
+        else:
+            relative = date_obj.strftime("%A")
+        actual = date_obj.strftime("%d %b %Y")
+        # parse start/end times
+        start_dt = datetime.datetime.fromisoformat(start_str)
+        end_dt = datetime.datetime.fromisoformat(end_str)
+        start_time = start_dt.strftime("%H:%M")
+        end_time = end_dt.strftime("%H:%M")
+        upcoming_lessons.append({
+            "relative": relative,
+            "actual": actual,
+            "start_time": start_time,
+            "end_time": end_time,
+            "student": student
+        })
+
     # Pass data to template
     earnings_data_json = json.dumps(earnings_data)
     return render_template(
         TEMPLATE,
         earnings_data_json=earnings_data_json,
         available_years=available_years,
-        selected_years=selected_years
+        selected_years=selected_years,
+        upcoming_lessons=upcoming_lessons
     )
 
 @app.route("/create-invoice")

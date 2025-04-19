@@ -57,9 +57,30 @@ def init_db():
             weekday INTEGER NOT NULL,
             student TEXT NOT NULL,
             duration REAL NOT NULL,
-            hourly_rate REAL NOT NULL
+            hourly_rate REAL NOT NULL,
+            start_time TEXT NOT NULL,
+            end_time TEXT NOT NULL
         )
     ''')
+    # Create students table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            level TEXT,
+            year TEXT,
+            exam_board TEXT,
+            target_grade TEXT,
+            subject TEXT
+        )
+    ''')
+    # Add student_id FK to lessons if missing
+    c.execute("PRAGMA table_info(lessons)")
+    cols = [row[1] for row in c.fetchall()]
+    if 'student_id' not in cols:
+        c.execute("ALTER TABLE lessons ADD COLUMN student_id INTEGER")
+    # Ensure SQLite enforces FKs
+    c.execute("PRAGMA foreign_keys = ON")
     conn.commit()
     conn.close()
 
@@ -104,13 +125,23 @@ def sync_calendar(month: int, year: int) -> None:
             date_str = date_obj.strftime("%Y-%m-%d")
             weekday = date_obj.weekday()
             student = get_student_name(USER_SETTINGS["control_str"], event)
+            # Lookup or insert student
+            c.execute("SELECT id FROM students WHERE name = ?", (student,))
+            row = c.fetchone()
+            if row:
+                student_id = row[0]
+            else:
+                c.execute("INSERT INTO students (name) VALUES (?)", (student,))
+                student_id = c.lastrowid
             duration = get_duration(event)
             hourly_rate = float(USER_SETTINGS["hourly_rate"])
+            start_str = event["start"].get("dateTime", event["start"].get("date"))
+            end_str = event["end"].get("dateTime", event["end"].get("date"))
             c.execute('''
                 INSERT OR REPLACE INTO lessons (
-                    event_id, date, weekday, student, duration, hourly_rate
-                ) VALUES (?, ?, ?, ?, ?, ?)
-            ''', (event_id, date_str, weekday, student, duration, hourly_rate))
+                    event_id, date, weekday, student, duration, hourly_rate, start_time, end_time, student_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (event_id, date_str, weekday, student, duration, hourly_rate, start_str, end_str, student_id))
         conn.commit()
         conn.close()
     except HttpError as error:
@@ -155,17 +186,19 @@ def fetch_lessons(month: int, year: int):
     else:
         end_date = datetime.date(year, month + 1, 1)
     c.execute('''
-        SELECT date, weekday, student, duration, hourly_rate
-        FROM lessons
-        WHERE date >= ? AND date < ?
-        ORDER BY date
+        SELECT l.date, l.weekday, s.name, s.level, s.year, s.exam_board, s.target_grade, s.subject,
+               l.duration, l.hourly_rate, l.start_time, l.end_time
+        FROM lessons l
+        JOIN students s ON l.student_id = s.id
+        WHERE l.date >= ? AND l.date < ?
+        ORDER BY l.date
     ''', (start_date.isoformat(), end_date.isoformat()))
     rows = c.fetchall()
     conn.close()
 
     lessons = []
-    for date_str, weekday, student, duration, hourly_rate in rows:
-        lesson = Lesson.from_db(date_str, weekday, student, duration, hourly_rate)
+    for date_str, weekday, student, level, year, exam_board, target_grade, subject, duration, hourly_rate, start_time, end_time in rows:
+        lesson = Lesson.from_db(date_str, weekday, student, duration, hourly_rate, start_time, end_time)
         lessons.append(lesson)
     return lessons
 
@@ -182,9 +215,12 @@ class Lesson:
         self.duration = get_duration(event)
         self.hourly_rate = float(USER_SETTINGS["hourly_rate"])
         self.earned = self.duration * self.hourly_rate
+        # record actual start/end timestamps
+        self.start_time = event["start"].get("dateTime", event["start"].get("date"))
+        self.end_time   = event["end"].get("dateTime", event["end"].get("date"))
 
     @classmethod
-    def from_db(cls, date_str, weekday, student, duration, hourly_rate):
+    def from_db(cls, date_str, weekday, student, duration, hourly_rate, start_time, end_time):
         obj = cls.__new__(cls)
         obj.date = datetime.datetime.strptime(date_str, '%Y-%m-%d').strftime('%d/%m/%Y')
         obj.weekday = weekday
@@ -192,6 +228,8 @@ class Lesson:
         obj.duration = duration
         obj.hourly_rate = hourly_rate
         obj.earned = duration * hourly_rate
+        obj.start_time = start_time
+        obj.end_time   = end_time
         return obj
 
     def __repr__(self) -> str:
