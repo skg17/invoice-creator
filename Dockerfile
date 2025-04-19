@@ -20,4 +20,4 @@ EXPOSE 5001
 ENV FLASK_APP=server.py
 ENV FLASK_ENV=production
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "server:app"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5001"]
