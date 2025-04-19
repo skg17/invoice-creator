@@ -1,116 +1,112 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Manage Students</title>
-    <style>
-      .student-card {
-        margin-bottom: 1.5em;
-        padding: 0.5em;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-      .student-card h3 {
-        margin: 0 0 0.5em 0;
-      }
-      nav form {
-        margin-bottom: 1em;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Manage Students</h1>
-    <nav>
-      <form method="get">
-        <label>Year:
-          <select name="year">
-            <option value="">All</option>
-            {% for yr in filter_years %}
-              <option value="{{ yr }}" {% if request.args.get('year') == yr %}selected{% endif %}>{{ yr }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label>Level:
-          <select name="level">
-            <option value="">All</option>
-            {% for lvl in filter_levels %}
-              <option value="{{ lvl }}" {% if request.args.get('level') == lvl %}selected{% endif %}>{{ lvl }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label>Exam Board:
-          <select name="exam_board">
-            <option value="">All</option>
-            {% for board in filter_boards %}
-              <option value="{{ board }}" {% if request.args.get('exam_board') == board %}selected{% endif %}>{{ board }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label>Status:
-          <select name="active">
-            <option value="">All</option>
-            {% for val, label in filter_active %}
-              <option value="{{ val }}" {% if request.args.get('active') == val|string %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <button type="submit">Filter</button>
-      </form>
-    </nav>
-
-    <form method="post">
-      <button type="submit">Save All Changes</button>
-      <hr>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Students - TutorDash</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; }
+    header { background: #fff; padding: 1em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+    header h1 { margin: 0; }
+    .nav-pills { margin-top: 0.5em; }
+    .nav-pills a {
+      display: inline-block;
+      margin: 0 0.5em;
+      padding: 0.5em 1em;
+      border-radius: 20px;
+      background: #eee;
+      color: #333;
+      text-decoration: none;
+    }
+    .nav-pills a.active { background: #3366cc; color: #fff; }
+    .container { display: flex; padding: 1em; }
+    .sidebar { flex: 0 0 25%; }
+    .sidebar .card { padding: 1em; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .sidebar h2 { margin-top: 0; }
+    .sidebar label { display: block; margin: 0.5em 0; }
+    .sidebar select { width: 100%; padding: 0.5em; margin-top: 0.25em; }
+    .main { flex: 1; margin-left: 1em; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1em; }
+    .card.student-card { background: #fff; padding: 1em; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .student-card h3 { margin: 0 0 0.5em 0; }
+    .student-details { display: grid; grid-template-columns: auto auto; row-gap: 0.5em; }
+    .student-details div { }
+    .student-details .label { color: #666; }
+    .student-details .value { text-align: right; }
+    .student-card .active-checkbox { margin-top: 1em; text-align: right; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TutorDash</h1>
+    <div class="nav-pills">
+      <a href="{{ url_for('index') }}">Home</a>
+      |
+      <a href="{{ url_for('manage_students') }}" class="active">Manage Students</a>
+      <a href="{{ url_for('sync_all') }}">Sync All Lessons</a>
+      <a href="{{ url_for('create_invoice') }}">Quick Invoice</a>
+      <a href="{{ url_for('create_invoice') }}">Custom Invoice</a>
+    </div>
+  </header>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="card">
+        <h2>Filter</h2>
+        <form method="get">
+          <label>
+            Year:
+            <select name="year">
+              <option value="">All</option>
+              {% for yr in filter_years %}
+                <option value="{{ yr }}" {% if request.args.get('year') == yr %}selected{% endif %}>{{ yr }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Level:
+            <select name="level">
+              <option value="">All</option>
+              {% for lvl in filter_levels %}
+                <option value="{{ lvl }}" {% if request.args.get('level') == lvl %}selected{% endif %}>{{ lvl }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Exam Board:
+            <select name="exam_board">
+              <option value="">All</option>
+              {% for board in filter_boards %}
+                <option value="{{ board }}" {% if request.args.get('exam_board') == board %}selected{% endif %}>{{ board }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Status:
+            <select name="active">
+              <option value="">All</option>
+              {% for val, label in filter_active %}
+                <option value="{{ val }}" {% if request.args.get('active') == val|string %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <button type="submit" style="margin-top:1em; padding:0.5em 1em;">Apply Filters</button>
+        </form>
+      </div>
+    </aside>
+    <section class="main">
       {% for student in students %}
-        <div class="student-card">
+        <div class="card student-card">
           <h3>{{ student[1] }}</h3>
-          <input type="hidden" name="student_ids" value="{{ student[0] }}">
-          <div>
-            <label>Level:
-              <select name="level-{{ student[0] }}">
-                {% for lvl in filter_levels %}
-                  <option value="{{ lvl }}" {% if lvl == student[2] %}selected{% endif %}>{{ lvl }}</option>
-                {% endfor %}
-              </select>
-            </label>
+          <div class="student-details">
+            <div class="label">Level</div><div class="value">{{ student[2] }}</div>
+            <div class="label">Year</div><div class="value">{{ student[3] }}</div>
+            <div class="label">Exam Board</div><div class="value">{{ student[4] }}</div>
+            <div class="label">Target Grade</div><div class="value">{{ student[5] }}</div>
           </div>
-          <div>
-            <label>Year:
-              <select name="year-{{ student[0] }}">
-                {% for yr in filter_years %}
-                  <option value="{{ yr }}" {% if yr == student[3] %}selected{% endif %}>{{ yr }}</option>
-                {% endfor %}
-              </select>
-            </label>
-          </div>
-          <div>
-            <label>Exam Board:
-              <select name="exam_board-{{ student[0] }}">
-                {% for board in filter_boards %}
-                  <option value="{{ board }}" {% if board == student[4] %}selected{% endif %}>{{ board }}</option>
-                {% endfor %}
-              </select>
-            </label>
-          </div>
-          <div>
-            <label>Target Grade:
-              <input type="text" name="target_grade-{{ student[0] }}" value="{{ student[5] or '' }}">
-            </label>
-          </div>
-          <div>
-            <label>Subject:
-              <input type="text" name="subject-{{ student[0] }}" value="{{ student[6] or '' }}">
-            </label>
-          </div>
-          <div>
-            <label>Active:
-              <input type="checkbox" name="active-{{ student[0] }}" {% if student[7] %}checked{% endif %}>
-            </label>
+          <div class="active-checkbox">
+            <label><input type="checkbox" name="active-{{ student[0] }}" {% if student[7] %}checked{% endif %}> Current</label>
           </div>
         </div>
       {% endfor %}
-    </form>
-
-    <a href="{{ url_for('index') }}">Back to dashboard</a>
-  </body>
+    </section>
+  </div>
+</body>
 </html>

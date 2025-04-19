@@ -4,82 +4,120 @@
   <meta charset="UTF-8">
   <title>TutorDash</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    header { text-align: center; padding: 1em; background: #f5f5f5; }
-    .toolbar { text-align: center; margin: 1em 0; }
-    .toolbar a, .toolbar button, .toolbar select { margin: 0 0.5em; }
-    .upcoming-lessons { width: 45%; float: left; margin: 1em; }
-    .lesson-card { margin: 0.5em 0; padding: 0.5em; border: 1px solid #ddd; border-radius: 4px; }
-    .graph-container {
-      width: 50%;
-      float: right;
-      box-sizing: border-box;
-      margin: 2em 0;
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; }
+    header { text-align: center; padding: 1em; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    header h1 { margin: 0; }
+    .nav-pills { margin-top: 1em; }
+    .nav-pills a {
+      display: inline-block;
+      margin: 0 0.5em;
+      padding: 0.5em 1em;
+      border-radius: 20px;
+      background: #eee;
+      text-decoration: none;
+      color: #333;
     }
-    #earningsChart {
-      width: 100%;
-      height: 300px;
+    .nav-pills a.active {
+      background: #3366cc;
+      color: #fff;
     }
-    .stats { text-align: center; margin-top: 1em; }
+    .container { display: flex; flex-wrap: nowrap; padding: 1em; }
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 1em; margin: 1em; }
+    .upcoming-lessons { flex: 0 0 45%; }
+    .lesson-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75em;
+      border-bottom: 1px solid #ddd;
+    }
+    .lesson-info, .lesson-student-info {
+      flex: 1;
+    }
+    .lesson-info {
+      text-align: left;
+    }
+    .lesson-student-info {
+      text-align: right;
+    }
+    .graph-container { flex: 0 0 45%; }
+    #earningsChart { width: 100%; height: 250px; }
+    .year-buttons { text-align: right; margin-bottom: 0.5em; }
+    .year-button {
+      margin: 0 0.25em;
+      padding: 0.25em 0.5em;
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .year-button.active {
+      background: #3366cc;
+      color: #fff;
+      border-color: #3366cc;
+    }
+    .stats { display: flex; justify-content: space-around; margin-top: 1em; }
+    .stats div { text-align: center; }
     #toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 1000; }
   </style>
 </head>
 <body>
   <header>
     <h1>TutorDash</h1>
-    <div class="toolbar">
-      <a href="{{ url_for('manage_students') }}">Manage Students</a> |
-      <a href="{{ url_for('sync_all') }}">Sync All Lessons</a> |
-      <a href="{{ url_for('create_invoice') }}">Quick Invoice</a> |
-      Month:
-      <select id="invoice-month">
-        {% for m in range(1, 13) %}
-          <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m }}</option>
-        {% endfor %}
-      </select>
-      Year:
-      <select id="invoice-year">
-        {% for y in available_years %}
-          <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
-        {% endfor %}
-      </select>
-      <button id="create-custom-invoice">Create</button>
+    <div class="nav-pills">
+      <a href="{{ url_for('manage_students') }}">Manage Students</a>
+      <a href="{{ url_for('sync_all') }}">Sync All Lessons</a>
+      <a href="{{ url_for('create_invoice') }}">Quick Invoice</a>
+      <a href="{{ url_for('create_invoice') }}">Custom Invoice</a>
     </div>
   </header>
 
-  <div class="upcoming-lessons">
-    <h2>Upcoming Lessons</h2>
-    {% if upcoming_lessons %}
-      {% for lesson in upcoming_lessons %}
-        <div class="lesson-card">
-          <div><strong>{{ lesson.relative }}</strong> <span style="color:#666; font-size:0.9em;">({{ lesson.actual }})</span></div>
-          <div>{{ lesson.start_time }} - {{ lesson.end_time }}</div>
-          <div>{{ lesson.student }}</div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <p>No upcoming lessons scheduled.</p>
-    {% endif %}
-  </div>
+  <div class="container">
+    <div class="card upcoming-lessons">
+      <h2>Upcoming Lessons</h2>
+      {% if upcoming_lessons %}
+        {% for lesson in upcoming_lessons %}
+          <div class="lesson-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="lesson-info">
+              <div><strong>{{ lesson.relative }}</strong></div>
+              <div style="font-size:0.9em; color:#666;">({{ lesson.actual }})</div>
+              <div>{{ lesson.start_time }} - {{ lesson.end_time }}</div>
+            </div>
+            <div class="lesson-student-info" style="text-align:right;">
+              <div style="font-weight:bold; font-size:1.1em;">{{ lesson.student }}</div>
+              <div style="font-size:0.9em; color:#666;">
+                {{ lesson.level }}, {{ lesson.year }}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No upcoming lessons scheduled.</p>
+      {% endif %}
+    </div>
 
-  <div class="graph-container">
-    <h2 style="text-align:center;">Year-to-Date Earnings</h2>
-    <details id="year-dropdown" style="text-align:center;">
-      <summary>Select Years</summary>
-      {% for y in available_years %}
-        <label style="margin-right:1em;">
-          <input type="checkbox" class="year-checkbox" value="{{ y }}" {% if y in selected_years %}checked{% endif %}>
-          {{ y }}
-        </label>
-      {% endfor %}
-      <br>
-      <button id="apply-year-filter" style="margin-top:0.5em;">Apply Changes</button>
-    </details>
-    <canvas id="earningsChart"></canvas>
-    <div class="stats">
-      <p><strong>Year-to-date:</strong> &pound;{{ ytd_total }}</p>
-      <p><strong>Month-to-date:</strong> &pound;{{ mtd_total }}</p>
-      <p><strong>Total:</strong> &pound;{{ total_all }}</p>
+    <div class="card graph-container">
+      <h2>Year-to-Date Earnings</h2>
+      <div class="year-buttons">
+        {% for y in available_years %}
+          <button class="year-button {% if y in selected_years %}active{% endif %}" data-year="{{ y }}">{{ y }}</button>
+        {% endfor %}
+      </div>
+      <canvas id="earningsChart"></canvas>
+      <div class="stats">
+        <div>
+          <div><strong>&pound;{{ ytd_total }}</strong></div>
+          <div>Year-to-Date</div>
+        </div>
+        <div>
+          <div><strong>&pound;{{ mtd_total }}</strong></div>
+          <div>Month-to-Date</div>
+        </div>
+        <div>
+          <div><strong>&pound;{{ total_all }}</strong></div>
+          <div>Total Earnings</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -101,8 +139,8 @@
     }
 
     // Initialize chart
-    const initialYears = Array.from(document.querySelectorAll('.year-checkbox:checked'))
-                               .map(cb => cb.value);
+    const initialYears = Array.from(document.querySelectorAll('.year-button.active'))
+                               .map(btn => btn.dataset.year);
     const ctx = document.getElementById('earningsChart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -119,17 +157,15 @@
       }
     });
 
-    document.getElementById('apply-year-filter').addEventListener('click', () => {
-      const selected = Array.from(document.querySelectorAll('.year-checkbox:checked'))
-                            .map(cb => cb.value);
-      chart.data.datasets = buildDatasets(selected);
-      chart.update();
-    });
-
-    document.getElementById('create-custom-invoice').addEventListener('click', () => {
-      const m = document.getElementById('invoice-month').value;
-      const y = document.getElementById('invoice-year').value;
-      window.location.href = `/create-invoice/${y}/${String(m).padStart(2,'0')}`;
+    // Year button click handler
+    document.querySelectorAll('.year-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        const selected = Array.from(document.querySelectorAll('.year-button.active'))
+                              .map(b => b.dataset.year);
+        chart.data.datasets = buildDatasets(selected);
+        chart.update();
+      });
     });
 
     {% for msg in get_flashed_messages() %}
