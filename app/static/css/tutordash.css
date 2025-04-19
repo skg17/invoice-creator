@@ -1,0 +1,270 @@
+/* Main content area next to sidebar */
+.main {
+  flex: 1;
+  margin-left: 1em;
+}
+/* Global */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f0f2f5;
+  color: #333;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+/* Form elements */
+select, input[type="text"] {
+  font-family: inherit;
+  font-size: 0.9em;
+  padding: 0.4em 0.6em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Enhanced dropdown arrow */
+select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath fill='none' stroke='%23666' stroke-width='1.5' d='M1 1l3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75em center;
+  padding-right: 2em;
+}
+
+/* Header */
+header {
+  background: #fff;
+  padding: 1em;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+header h1 {
+  margin: 0;
+  font-size: 1.8em;
+}
+/* Navigation Pills */
+.nav-pills {
+  margin-top: 0.5em;
+}
+.nav-pills a,
+.nav-pills button {
+  display: inline-block;
+  margin: 0 0.5em;
+  padding: 0.5em 1em;
+  border-radius: 20px;
+  background: #eee;
+  color: #333;
+  cursor: pointer;
+  border: none;
+  font-size: 0.9em;
+}
+.nav-pills a.active,
+.nav-pills button.active {
+  background: #3366cc;
+  color: #fff;
+}
+/* Button Pills */
+.button-pill {
+  display: inline-block;
+  padding: 0.5em 1em;
+  border-radius: 20px;
+  background: #3366cc;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.button-pill.secondary {
+  background: #eee;
+  color: #333;
+}
+.button-pill.delete-btn {
+  background: #dc3912;
+  color: #fff;
+}
+/* Toasts */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10000;
+}
+#toast-container div {
+  background: #333;
+  color: #fff;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+/* Layout container */
+.container {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  padding: 1em;
+}
+/* Upcoming Lessons */
+.upcoming-lessons {
+  flex: 0 0 45%;
+  margin-right: 1em;
+}
+.upcoming-lessons h2 {
+  margin-top: 0;
+}
+/* Card styling for panels */
+.upcoming-lessons,
+.graph-container {
+  background: #fff;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.lesson-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75em;
+  border-bottom: 1px solid #ddd;
+}
+.lesson-info, .lesson-student-info {
+  flex: 1;
+}
+.lesson-info {
+  text-align: left;
+}
+.lesson-student-info {
+  text-align: right;
+}
+/* Graph */
+.graph-container {
+  flex: 0 0 45%;
+}
+#earningsChart {
+  width: 100%;
+  height: 250px;
+}
+.year-buttons {
+  text-align: right;
+  margin-bottom: 0.5em;
+}
+.year-button {
+  margin: 0 0.25em;
+  padding: 0.25em 0.5em;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.year-button.active {
+  background: #3366cc;
+  color: #fff;
+  border-color: #3366cc;
+}
+.stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1em;
+}
+.stats div {
+  text-align: center;
+}
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.4);
+  z-index: 10000;
+}
+.modal.hidden {
+  display: none;
+}
+.modal-content {
+  background: #fff;
+  padding: 1.5em;
+  border-radius: 8px;
+  width: 320px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.modal-content h2 {
+  margin: 0 0 1em;
+  font-size: 1.4em;
+  text-align: center;
+}
+.modal-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 1.5em;
+}
+.modal-body label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9em;
+}
+.modal-footer {
+  text-align: right;
+}
+/* Students Page */
+.sidebar {
+  flex: 0 0 25%;
+}
+.sidebar .card {
+  background: #fff;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.sidebar h2 {
+  margin-top: 0;
+}
+.sidebar label {
+  display: block;
+  margin: 0.5em 0;
+}
+.sidebar select {
+  width: 100%;
+  padding: 0.5em;
+  margin-top: 0.25em;
+}
+#students-form {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1em;
+}
+.student-card {
+  background: #fff;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.student-card h3 {
+  margin: 0 0 0.5em 0;
+}
+.student-details {
+  display: grid;
+  grid-template-columns: auto auto;
+  row-gap: 0.5em;
+}
+.student-details .label {
+  color: #666;
+}
+.student-details .value {
+  text-align: right;
+}
+.active-checkbox {
+  margin-top: 1em;
+  text-align: right;
+}

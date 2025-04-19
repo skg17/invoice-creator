@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.env
+node_modules/
+invoices/html/
+invoices/pdf/
+lessons.db
+*.json

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TutorDash</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tutordash.css') }}">
+</head>
+<body>
+  <header>
+    <h1>TutorDash</h1>
+    <div class="nav-pills">
+      <a href="{{ url_for('manage_students') }}">Manage Students</a>
+      <a href="{{ url_for('sync_all') }}">Sync All Lessons</a>
+      <a href="{{ url_for('create_invoice') }}">Quick Invoice</a>
+      <button id="open-custom-invoice" class="button-pill secondary">Custom Invoice</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card upcoming-lessons">
+      <h2>Upcoming Lessons</h2>
+      {% if upcoming_lessons %}
+        {% for lesson in upcoming_lessons %}
+          <div class="lesson-card">
+            <div class="lesson-info">
+              <div><strong>{{ lesson.relative }}</strong></div>
+              <div class="actual-date">({{ lesson.actual }})</div>
+              <div>{{ lesson.start_time }} - {{ lesson.end_time }}</div>
+            </div>
+            <div class="lesson-student-info">
+              <div class="lesson-student-name">{{ lesson.student.name }}</div>
+              <div class="lesson-student-meta">
+                {{ lesson.student.level }}, {{ lesson.student.year }} - {{ lesson.student.subject }} ({{ lesson.student.exam_board }})
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No upcoming lessons scheduled.</p>
+      {% endif %}
+    </div>
+
+    <div class="card graph-container">
+      <h2>Year-to-Date Earnings</h2>
+      <div class="year-buttons">
+        {% for y in available_years %}
+          <button class="year-button {% if y in selected_years %}active{% endif %}" data-year="{{ y }}">{{ y }}</button>
+        {% endfor %}
+      </div>
+      <canvas id="earningsChart"></canvas>
+      <div class="stats">
+        <div>
+          <div><strong>&pound;{{ "{:,.2f}".format(ytd_total) }}</strong></div>
+          <div>Year-to-Date</div>
+        </div>
+        <div>
+          <div><strong>&pound;{{ "{:,.2f}".format(mtd_total) }}</strong></div>
+          <div>Month-to-Date</div>
+        </div>
+        <div>
+          <div><strong>&pound;{{ "{:,.2f}".format(total_all) }}</strong></div>
+          <div>Total Earnings</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Custom Invoice Modal -->
+  <div id="custom-invoice-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <h2>Custom Invoice</h2>
+      <div class="modal-body">
+        <p>Month</p>
+        <select id="modal-invoice-month">
+          {% for m in range(1,13) %}
+            <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+        <p>Year</p>
+        <select id="modal-invoice-year">
+          {% for y in available_years %}
+            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-modal" class="button-pill secondary">Cancel</button>
+        <button id="generate-modal" class="button-pill">Generate Invoice</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const palette = ['#3366cc', '#dc3912', '#ff9900', '#109618', '#990099'];
+    const earningsData = {{ earnings_data_json | safe }};
+    const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function buildDatasets(years) {
+      return years.map((year, idx) => ({
+        label: year,
+        data: earningsData[year] || Array(labels.length).fill(0),
+        fill: false,
+        borderColor: palette[idx % palette.length],
+      }));
+    }
+
+    // Initialize chart
+    const initialYears = Array.from(document.querySelectorAll('.year-button.active'))
+                               .map(btn => btn.dataset.year);
+    const ctx = document.getElementById('earningsChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: buildDatasets(initialYears),
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { title: { display: true, text: 'Earnings' } },
+          x: { title: { display: true, text: 'Month' } }
+        }
+      }
+    });
+
+    // Year button click handler
+    document.querySelectorAll('.year-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        const selected = Array.from(document.querySelectorAll('.year-button.active'))
+                              .map(b => b.dataset.year);
+        chart.data.datasets = buildDatasets(selected);
+        chart.update();
+      });
+    });
+
+    {% for msg in get_flashed_messages() %}
+      const toast = document.createElement('div');
+      toast.innerText = "{{ msg }}";
+      toast.style.cssText = 'background:#333;color:#fff;padding:10px;border-radius:4px;margin-top:5px;';
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => toast.remove(), 20000);
+    {% endfor %}
+
+    // Modal open/close logic
+    document.getElementById('open-custom-invoice').addEventListener('click', () => {
+      document.getElementById('custom-invoice-modal').classList.remove('hidden');
+    });
+    document.getElementById('cancel-modal').addEventListener('click', () => {
+      document.getElementById('custom-invoice-modal').classList.add('hidden');
+    });
+    document.getElementById('generate-modal').addEventListener('click', () => {
+      const m = String(document.getElementById('modal-invoice-month').value).padStart(2,'0');
+      const y = document.getElementById('modal-invoice-year').value;
+      window.location.href = `/create-invoice/${y}/${m}`;
+    });
+  </script>
+</body>
+</html>

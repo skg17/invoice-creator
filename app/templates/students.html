@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Students - TutorDash</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tutordash.css') }}">
+</head>
+<body>
+  <header>
+    <h1>TutorDash</h1>
+    <div class="nav-pills">
+      <a href="{{ url_for('index') }}">Home</a>
+      |
+      <a href="{{ url_for('manage_students') }}" class="active">Manage Students</a>
+      <a href="{{ url_for('sync_all') }}">Sync All Lessons</a>
+      <a href="{{ url_for('create_invoice') }}">Quick Invoice</a>
+      <a href="{{ url_for('create_invoice') }}">Custom Invoice</a>
+      <span class="nav-separator">|</span>
+      <button id="toggle-edit" class="button-pill">Edit Mode</button>
+      <button type="submit" form="students-form" id="save-nav" class="button-pill secondary" style="display:none; margin-left:0.5em;">Save</button>
+    </div>
+  </header>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="card">
+        <h2>Filter</h2>
+        <form method="get">
+          <label>
+            Year:
+            <select name="year">
+              <option value="">All</option>
+              {% for yr in filter_years %}
+                <option value="{{ yr }}" {% if request.args.get('year') == yr %}selected{% endif %}>{{ yr }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Level:
+            <select name="level">
+              <option value="">All</option>
+              {% for lvl in filter_levels %}
+                <option value="{{ lvl }}" {% if request.args.get('level') == lvl %}selected{% endif %}>{{ lvl }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Exam Board:
+            <select name="exam_board">
+              <option value="">All</option>
+              {% for board in filter_boards %}
+                <option value="{{ board }}" {% if request.args.get('exam_board') == board %}selected{% endif %}>{{ board }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Status:
+            <select name="active">
+              <option value="">All</option>
+              {% for val, label in filter_active %}
+                <option value="{{ val }}" {% if request.args.get('active') == val|string %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <button type="submit" class="button-pill secondary">Apply Filters</button>
+        </form>
+      </div>
+    </aside>
+    <section class="main">
+      <form method="post" id="students-form">
+
+      {% for student in students %}
+        <div class="card student-card">
+          <h3>{{ student.name }}</h3>
+          <div class="student-details">
+            <div class="label">Level</div>
+            <div class="value">
+              <select name="level-{{ student.id }}" class="styled-select" disabled>
+                {% for lvl in filter_levels %}
+                  <option value="{{ lvl }}" {% if lvl == student.level %}selected{% endif %}>{{ lvl }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="label">Year</div>
+            <div class="value">
+              <select name="year-{{ student.id }}" class="styled-select" disabled>
+                {% for yr in filter_years %}
+                  <option value="{{ yr }}" {% if yr == student.year %}selected{% endif %}>{{ yr }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="label">Exam Board</div>
+            <div class="value">
+              <select name="exam_board-{{ student.id }}" class="styled-select" disabled>
+                {% for board in filter_boards %}
+                  <option value="{{ board }}" {% if board == student.exam_board %}selected{% endif %}>{{ board }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="label">Target Grade</div>
+            <div class="value">
+              <input type="text" name="target_grade-{{ student.id }}" value="{{ student.target_grade or '' }}" disabled>
+            </div>
+            <div class="label">Subject</div>
+            <div class="value">
+              <input type="text" name="subject-{{ student.id }}" value="{{ student.subject or '' }}" disabled>
+            </div>
+            <input type="hidden" name="student_ids" value="{{ student.id }}">
+          </div>
+          <div class="active-checkbox">
+            <label>Status:
+              <select name="active-{{ student.id }}" class="styled-select" disabled>
+                {% for val, label in filter_active %}
+                  <option value="{{ val }}" {% if student.active == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <button type="submit" name="delete" value="{{ student.id }}" class="button-pill delete-btn" style="display:none;">Delete</button>
+          </div>
+        </div>
+      {% endfor %}
+      </form>
+    </section>
+  </div>
+  <script>
+    document.getElementById('toggle-edit').addEventListener('click', function() {
+      const editing = this.dataset.editing !== 'true';
+      this.dataset.editing = editing;
+      this.textContent = editing ? 'Cancel' : 'Edit';
+      document.getElementById('save-nav').style.display = editing ? 'inline-block' : 'none';
+      document.querySelectorAll('#students-form select, #students-form input[type="text"]').forEach(el => {
+        el.disabled = !editing;
+      });
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.style.display = editing ? 'inline-block' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
