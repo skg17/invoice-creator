@@ -3,74 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Manage Students - TutorDash</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; }
-    header { background: #fff; padding: 1em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
-    header h1 { margin: 0; }
-    .nav-pills { margin-top: 0.5em; }
-    .nav-pills a {
-      display: inline-block;
-      margin: 0 0.5em;
-      padding: 0.5em 1em;
-      border-radius: 20px;
-      background: #eee;
-      color: #333;
-      text-decoration: none;
-    }
-    .nav-pills a.active { background: #3366cc; color: #fff; }
-    .container { display: flex; padding: 1em; }
-    .sidebar { flex: 0 0 25%; }
-    .sidebar .card { padding: 1em; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .sidebar h2 { margin-top: 0; }
-    .sidebar label { display: block; margin: 0.5em 0; }
-    .sidebar select { width: 100%; padding: 0.5em; margin-top: 0.25em; }
-    .main { flex: 1; margin-left: 1em; }
-    .student-card h3 { margin: 0 0 0.5em 0; }
-    .student-details { display: grid; grid-template-columns: auto auto; row-gap: 0.5em; }
-    .student-details div { }
-    .student-details .label { color: #666; }
-    .student-details .value { text-align: right; }
-    .student-card .active-checkbox { margin-top: 1em; text-align: right; }
-    #form-controls {
-      grid-column: 1 / -1;
-      display: flex;
-      gap: 1em;
-      justify-content: flex-end;
-    }
-  </style>
-  <style>
-    /* Grid layout for student cards */
-    #students-form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1em;
-      align-items: start;
-    }
-    .student-card {
-      background: #fff;
-      padding: 1em;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .button-pill {
-      background: #3366cc;
-      color: #fff;
-      border: none;
-      border-radius: 20px;
-      padding: 0.5em 1em;
-      cursor: pointer;
-      font-size: 0.9em;
-    }
-    .button-pill.secondary {
-      background: #eee;
-      color: #333;
-    }
-    .button-pill.delete-btn {
-      background: #dc3912;
-      color: #fff;
-      border: none;
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tutordash.css') }}">
 </head>
 <body>
   <header>
@@ -82,6 +15,9 @@
       <a href="{{ url_for('sync_all') }}">Sync All Lessons</a>
       <a href="{{ url_for('create_invoice') }}">Quick Invoice</a>
       <a href="{{ url_for('create_invoice') }}">Custom Invoice</a>
+      <span class="nav-separator">|</span>
+      <button id="toggle-edit" class="button-pill">Edit Mode</button>
+      <button type="submit" form="students-form" id="save-nav" class="button-pill secondary" style="display:none; margin-left:0.5em;">Save</button>
     </div>
   </header>
   <div class="container">
@@ -125,16 +61,13 @@
               {% endfor %}
             </select>
           </label>
-          <button type="submit" style="margin-top:1em; padding:0.5em 1em;">Apply Filters</button>
+          <button type="submit" class="button-pill secondary">Apply Filters</button>
         </form>
       </div>
     </aside>
     <section class="main">
       <form method="post" id="students-form">
-        <div id="form-controls">
-          <button type="button" id="toggle-edit" class="button-pill">Edit Mode</button>
-          <button type="submit" id="save-btn" class="button-pill secondary" style="display:none;">Save Changes</button>
-        </div>
+
       {% for student in students %}
         <div class="card student-card">
           <h3>{{ student.name }}</h3>
@@ -181,7 +114,7 @@
                 {% endfor %}
               </select>
             </label>
-            <button type="submit" name="delete" value="{{ student.id }}" class="button-pill delete-btn" style="margin-top:1em; display:none;">Delete</button>
+            <button type="submit" name="delete" value="{{ student.id }}" class="button-pill delete-btn" style="display:none;">Delete</button>
           </div>
         </div>
       {% endfor %}
@@ -192,8 +125,8 @@
     document.getElementById('toggle-edit').addEventListener('click', function() {
       const editing = this.dataset.editing !== 'true';
       this.dataset.editing = editing;
-      this.textContent = editing ? 'Exit' : 'Edit Mode';
-      document.getElementById('save-btn').style.display = editing ? 'inline-block' : 'none';
+      this.textContent = editing ? 'Cancel' : 'Edit';
+      document.getElementById('save-nav').style.display = editing ? 'inline-block' : 'none';
       document.querySelectorAll('#students-form select, #students-form input[type="text"]').forEach(el => {
         el.disabled = !editing;
       });

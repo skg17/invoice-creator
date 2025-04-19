@@ -3,63 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>TutorDash</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; }
-    header { text-align: center; padding: 1em; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    header h1 { margin: 0; }
-    .nav-pills { margin-top: 1em; }
-    .nav-pills a {
-      display: inline-block;
-      margin: 0 0.5em;
-      padding: 0.5em 1em;
-      border-radius: 20px;
-      background: #eee;
-      text-decoration: none;
-      color: #333;
-    }
-    .nav-pills a.active {
-      background: #3366cc;
-      color: #fff;
-    }
-    .container { display: flex; flex-wrap: nowrap; padding: 1em; }
-    .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 1em; margin: 1em; }
-    .upcoming-lessons { flex: 0 0 45%; }
-    .lesson-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75em;
-      border-bottom: 1px solid #ddd;
-    }
-    .lesson-info, .lesson-student-info {
-      flex: 1;
-    }
-    .lesson-info {
-      text-align: left;
-    }
-    .lesson-student-info {
-      text-align: right;
-    }
-    .graph-container { flex: 0 0 45%; }
-    #earningsChart { width: 100%; height: 250px; }
-    .year-buttons { text-align: right; margin-bottom: 0.5em; }
-    .year-button {
-      margin: 0 0.25em;
-      padding: 0.25em 0.5em;
-      border: 1px solid #ccc;
-      background: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .year-button.active {
-      background: #3366cc;
-      color: #fff;
-      border-color: #3366cc;
-    }
-    .stats { display: flex; justify-content: space-around; margin-top: 1em; }
-    .stats div { text-align: center; }
-    #toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 1000; }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tutordash.css') }}">
 </head>
 <body>
   <header>
@@ -68,7 +12,7 @@
       <a href="{{ url_for('manage_students') }}">Manage Students</a>
       <a href="{{ url_for('sync_all') }}">Sync All Lessons</a>
       <a href="{{ url_for('create_invoice') }}">Quick Invoice</a>
-      <a href="{{ url_for('create_invoice') }}">Custom Invoice</a>
+      <button id="open-custom-invoice" class="button-pill secondary">Custom Invoice</button>
     </div>
   </header>
 
@@ -123,6 +67,35 @@
 
   <div id="toast-container"></div>
 
+  <!-- Custom Invoice Modal -->
+  <div id="custom-invoice-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <h2>Custom Invoice</h2>
+      <div class="modal-body">
+        <label>
+          Month:
+          <select id="modal-invoice-month">
+            {% for m in range(1,13) %}
+              <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          Year:
+          <select id="modal-invoice-year">
+            {% for y in available_years %}
+              <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-modal" class="button-pill secondary">Cancel</button>
+        <button id="generate-modal" class="button-pill">Generate Invoice</button>
+      </div>
+    </div>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const palette = ['#3366cc', '#dc3912', '#ff9900', '#109618', '#990099'];
@@ -175,6 +148,19 @@
       document.getElementById('toast-container').appendChild(toast);
       setTimeout(() => toast.remove(), 20000);
     {% endfor %}
+
+    // Modal open/close logic
+    document.getElementById('open-custom-invoice').addEventListener('click', () => {
+      document.getElementById('custom-invoice-modal').classList.remove('hidden');
+    });
+    document.getElementById('cancel-modal').addEventListener('click', () => {
+      document.getElementById('custom-invoice-modal').classList.add('hidden');
+    });
+    document.getElementById('generate-modal').addEventListener('click', () => {
+      const m = String(document.getElementById('modal-invoice-month').value).padStart(2,'0');
+      const y = document.getElementById('modal-invoice-year').value;
+      window.location.href = `/create-invoice/${y}/${m}`;
+    });
   </script>
 </body>
 </html>
