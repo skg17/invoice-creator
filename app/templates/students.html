@@ -24,14 +24,47 @@
     .sidebar h2 { margin-top: 0; }
     .sidebar label { display: block; margin: 0.5em 0; }
     .sidebar select { width: 100%; padding: 0.5em; margin-top: 0.25em; }
-    .main { flex: 1; margin-left: 1em; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1em; }
-    .card.student-card { background: #fff; padding: 1em; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .main { flex: 1; margin-left: 1em; }
     .student-card h3 { margin: 0 0 0.5em 0; }
     .student-details { display: grid; grid-template-columns: auto auto; row-gap: 0.5em; }
     .student-details div { }
     .student-details .label { color: #666; }
     .student-details .value { text-align: right; }
     .student-card .active-checkbox { margin-top: 1em; text-align: right; }
+    #form-controls {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 1em;
+      justify-content: flex-end;
+    }
+  </style>
+  <style>
+    /* Grid layout for student cards */
+    #students-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1em;
+      align-items: start;
+    }
+    .student-card {
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .button-pill {
+      background: #3366cc;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 0.5em 1em;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    .button-pill.secondary {
+      background: #eee;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -92,21 +125,63 @@
       </div>
     </aside>
     <section class="main">
+      <form method="post" id="students-form">
+        <div id="form-controls">
+          <button type="button" id="toggle-edit" class="button-pill">Edit Mode</button>
+          <button type="submit" id="save-btn" class="button-pill secondary" style="display:none;">Save Changes</button>
+        </div>
       {% for student in students %}
         <div class="card student-card">
           <h3>{{ student[1] }}</h3>
           <div class="student-details">
-            <div class="label">Level</div><div class="value">{{ student[2] }}</div>
-            <div class="label">Year</div><div class="value">{{ student[3] }}</div>
-            <div class="label">Exam Board</div><div class="value">{{ student[4] }}</div>
-            <div class="label">Target Grade</div><div class="value">{{ student[5] }}</div>
+            <div class="label">Level</div>
+            <div class="value">
+              <select name="level-{{ student[0] }}" disabled>
+                {% for lvl in filter_levels %}
+                  <option value="{{ lvl }}" {% if lvl == student[2] %}selected{% endif %}>{{ lvl }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="label">Year</div>
+            <div class="value">
+              <select name="year-{{ student[0] }}" disabled>
+                {% for yr in filter_years %}
+                  <option value="{{ yr }}" {% if yr == student[3] %}selected{% endif %}>{{ yr }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="label">Exam Board</div>
+            <div class="value">
+              <select name="exam_board-{{ student[0] }}" disabled>
+                {% for board in filter_boards %}
+                  <option value="{{ board }}" {% if board == student[4] %}selected{% endif %}>{{ board }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="label">Target Grade</div>
+            <div class="value">
+              <input type="text" name="target_grade-{{ student[0] }}" value="{{ student[5] or '' }}" disabled>
+            </div>
+            <input type="hidden" name="student_ids" value="{{ student[0] }}">
           </div>
           <div class="active-checkbox">
             <label><input type="checkbox" name="active-{{ student[0] }}" {% if student[7] %}checked{% endif %}> Current</label>
           </div>
         </div>
       {% endfor %}
+      </form>
     </section>
   </div>
+  <script>
+    document.getElementById('toggle-edit').addEventListener('click', function() {
+      const editing = this.dataset.editing !== 'true';
+      this.dataset.editing = editing;
+      this.textContent = editing ? 'Exit' : 'Edit Mode';
+      document.getElementById('save-btn').style.display = editing ? 'inline-block' : 'none';
+      document.querySelectorAll('#students-form select, #students-form input[type="text"]').forEach(el => {
+        el.disabled = !editing;
+      });
+    });
+  </script>
 </body>
 </html>
