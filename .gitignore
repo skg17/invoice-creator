@@ -238,8 +238,7 @@ pyrightconfig.json
 .ionide
 
 ### Project Specific Ignores ###
-credentials.json
-token.json
-user_settings.json
 invoice.html
 *.pdf
+lessons.db
+*.json

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  tutordash:
+    build: .
+    container_name: tutordash
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./lessons.db:/app/lessons.db
+      - ./static:/app/static
+      - ./invoices/pdf:/app/invoices/pdf
+    environment:
+      FLASK_APP: server.py
+      FLASK_ENV: production
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
+    restart: unless-stopped

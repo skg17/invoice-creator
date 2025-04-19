@@ -12,7 +12,7 @@ FILTER_EXAM_BOARDS = ['AQA', 'Edexcel', 'OCR A', 'OCR B', 'iGCSE']
 FILTER_ACTIVE = [(1, 'Current'), (0, 'Past')]
 
 app = Flask(__name__, template_folder='templates')
-app.secret_key = 'supersecretkey'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key')
 DASHBOARD = 'index.html'
 STUDENTS_HTML = 'students.html'
 
