@@ -1,8 +1,6 @@
 import datetime
 import os
 import sqlite3
-import json
-import calendar
 import jinja2
 import pdfkit
 from settings import get_user_settings
