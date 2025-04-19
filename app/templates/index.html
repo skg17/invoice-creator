@@ -1,139 +1,144 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Invoice Creator</title>
-    <style>
-      .graph-container {
-        position: absolute;
-        top: 5vh;
-        right: 5vw;
-        width: 35vw;
-        height: 35vh;
-      }
-      .graph-container canvas {
-        width: 100%;
-        height: 100%;
-      }
-      .lesson-card {
-        margin: 0.5em 0;
-        padding: 0.5em;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-      .lesson-date {
-        font-weight: bold;
-      }
-      .actual-date {
-        font-size: 0.9em;
-        color: #666;
-      }
-      .lesson-time, .lesson-student {
-        margin-top: 0.2em;
-      }
-      .upcoming-lessons {
-        width: 50vw;
-        margin: 1em;
-      }
-    </style>
-  </head>
-  <body>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul class="flashes">
-          {% for msg in messages %}
-            <li>{{ msg }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-    <h1>Invoice Creator</h1>
-    <nav>
-      <a href="{{ url_for('manage_students') }}">Manage Students</a>
-    </nav>
-
-    <!-- Existing buttons -->
-    <form action="{{ url_for('create_invoice') }}" method="get">
-      <button type="submit">Create Invoice (This Month)</button>
-    </form>
-    <form action="{{ url_for('sync_all') }}" method="get">
-      <button type="submit">Sync All Lessons</button>
-    </form>
-
-    <!-- New custom-month form -->
-    <h2>Create Invoice for a Specific Month</h2>
-    <form id="custom-invoice-form">
-      <label>
-        Year:
-        <input type="number" id="year-input" name="year" min="2000" max="2100" required>
-      </label>
-      <label>
-        Month:
-        <input type="number" id="month-input" name="month" min="1" max="12" required>
-      </label>
-      <button type="submit">Create Custom Invoice</button>
-    </form>
-
-    <script>
-      document
-        .getElementById('custom-invoice-form')
-        .addEventListener('submit', function(e) {
-          e.preventDefault();
-          const y = document.getElementById('year-input').value;
-          const m = document.getElementById('month-input').value.padStart(2, '0');
-          // redirect to your custom route
-          window.location.href = `/create-invoice-custom/${y}/${m}`;
-        });
-    </script>
-    <div class="upcoming-lessons">
-      <h2>Upcoming Lessons</h2>
-      {% if upcoming_lessons %}
-        {% for lesson in upcoming_lessons %}
-          <div class="lesson-card">
-            <div class="lesson-date">{{ lesson.relative }}</div>
-            <div class="actual-date">{{ lesson.actual }}</div>
-            <div class="lesson-time">{{ lesson.start_time }} - {{ lesson.end_time }}</div>
-            <div class="lesson-student">{{ lesson.student }}</div>
-          </div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TutorDash</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { text-align: center; padding: 1em; background: #f5f5f5; }
+    .toolbar { text-align: center; margin: 1em 0; }
+    .toolbar a, .toolbar button, .toolbar select { margin: 0 0.5em; }
+    .upcoming-lessons { width: 45%; float: left; margin: 1em; }
+    .lesson-card { margin: 0.5em 0; padding: 0.5em; border: 1px solid #ddd; border-radius: 4px; }
+    .graph-container {
+      width: 50%;
+      float: right;
+      box-sizing: border-box;
+      margin: 2em 0;
+    }
+    #earningsChart {
+      width: 100%;
+      height: 300px;
+    }
+    .stats { text-align: center; margin-top: 1em; }
+    #toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 1000; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TutorDash</h1>
+    <div class="toolbar">
+      <a href="{{ url_for('manage_students') }}">Manage Students</a> |
+      <a href="{{ url_for('sync_all') }}">Sync All Lessons</a> |
+      <a href="{{ url_for('create_invoice') }}">Quick Invoice</a> |
+      Month:
+      <select id="invoice-month">
+        {% for m in range(1, 13) %}
+          <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m }}</option>
         {% endfor %}
-      {% else %}
-        <p>No upcoming lessons scheduled.</p>
-      {% endif %}
-    </div>
-    <div class="graph-container">
-      <h2>Year-to-Date Earnings</h2>
-      <form method="get" id="year-select-form">
-        {% for year in available_years %}
-          <label>
-            <input type="checkbox" name="year" value="{{ year }}" {% if year in selected_years %}checked{% endif %}>
-            {{ year }}
-          </label>
+      </select>
+      Year:
+      <select id="invoice-year">
+        {% for y in available_years %}
+          <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
-        <button type="submit">Update Graph</button>
-      </form>
-      <canvas id="earningsChart"></canvas>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <script>
-        const earningsData = {{ earnings_data_json | safe }};
-        const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const datasets = Object.entries(earningsData).map(([year, data]) => ({
-          label: year,
-          data: data,
-          fill: false,
-          borderColor: '#' + Math.floor(Math.random()*16777215).toString(16)
-        }));
-        const ctx = document.getElementById('earningsChart').getContext('2d');
-        new Chart(ctx, {
-          type: 'line',
-          data: { labels: labels, datasets: datasets },
-          options: {
-            responsive: true,
-            scales: {
-              y: { title: { display: true, text: 'Earnings' } },
-              x: { title: { display: true, text: 'Month' } }
-            }
-          }
-        });
-      </script>
+      </select>
+      <button id="create-custom-invoice">Create</button>
     </div>
-  </body>
+  </header>
+
+  <div class="upcoming-lessons">
+    <h2>Upcoming Lessons</h2>
+    {% if upcoming_lessons %}
+      {% for lesson in upcoming_lessons %}
+        <div class="lesson-card">
+          <div><strong>{{ lesson.relative }}</strong> <span style="color:#666; font-size:0.9em;">({{ lesson.actual }})</span></div>
+          <div>{{ lesson.start_time }} - {{ lesson.end_time }}</div>
+          <div>{{ lesson.student }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No upcoming lessons scheduled.</p>
+    {% endif %}
+  </div>
+
+  <div class="graph-container">
+    <h2 style="text-align:center;">Year-to-Date Earnings</h2>
+    <details id="year-dropdown" style="text-align:center;">
+      <summary>Select Years</summary>
+      {% for y in available_years %}
+        <label style="margin-right:1em;">
+          <input type="checkbox" class="year-checkbox" value="{{ y }}" {% if y in selected_years %}checked{% endif %}>
+          {{ y }}
+        </label>
+      {% endfor %}
+      <br>
+      <button id="apply-year-filter" style="margin-top:0.5em;">Apply Changes</button>
+    </details>
+    <canvas id="earningsChart"></canvas>
+    <div class="stats">
+      <p><strong>Year-to-date:</strong> &pound;{{ ytd_total }}</p>
+      <p><strong>Month-to-date:</strong> &pound;{{ mtd_total }}</p>
+      <p><strong>Total:</strong> &pound;{{ total_all }}</p>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const palette = ['#3366cc', '#dc3912', '#ff9900', '#109618', '#990099'];
+    const earningsData = {{ earnings_data_json | safe }};
+    const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function buildDatasets(years) {
+      return years.map((year, idx) => ({
+        label: year,
+        data: earningsData[year] || Array(labels.length).fill(0),
+        fill: false,
+        borderColor: palette[idx % palette.length],
+      }));
+    }
+
+    // Initialize chart
+    const initialYears = Array.from(document.querySelectorAll('.year-checkbox:checked'))
+                               .map(cb => cb.value);
+    const ctx = document.getElementById('earningsChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: buildDatasets(initialYears),
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { title: { display: true, text: 'Earnings' } },
+          x: { title: { display: true, text: 'Month' } }
+        }
+      }
+    });
+
+    document.getElementById('apply-year-filter').addEventListener('click', () => {
+      const selected = Array.from(document.querySelectorAll('.year-checkbox:checked'))
+                            .map(cb => cb.value);
+      chart.data.datasets = buildDatasets(selected);
+      chart.update();
+    });
+
+    document.getElementById('create-custom-invoice').addEventListener('click', () => {
+      const m = document.getElementById('invoice-month').value;
+      const y = document.getElementById('invoice-year').value;
+      window.location.href = `/create-invoice/${y}/${String(m).padStart(2,'0')}`;
+    });
+
+    {% for msg in get_flashed_messages() %}
+      const toast = document.createElement('div');
+      toast.innerText = "{{ msg }}";
+      toast.style.cssText = 'background:#333;color:#fff;padding:10px;border-radius:4px;margin-top:5px;';
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => toast.remove(), 20000);
+    {% endfor %}
+  </script>
+</body>
 </html>

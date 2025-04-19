@@ -32,9 +32,9 @@ def index():
     conn.close()
     min_year = int(min_date.split("-")[0]) if min_date else current_year
     available_years = list(range(min_year, current_year + 1))
-    # Compute earnings per month for each selected year
+    # Compute earnings per month for each available year
     earnings_data = {}
-    for year in selected_years:
+    for year in available_years:
         monthly_totals = []
         for month in range(1, 13):
             lessons = fetch_lessons(month, year)
@@ -80,6 +80,18 @@ def index():
             "student": student
         })
 
+    # Compute statistics
+    # Year-to-date earnings for current year
+    ytd_total = sum(earnings_data.get(current_year, []))
+    # Month-to-date earnings
+    mtd_total = earnings_data.get(current_year, [0] * 12)[now.month - 1]
+    # Total earnings since the beginning
+    conn2 = sqlite3.connect(DB_FILE)
+    c2 = conn2.cursor()
+    c2.execute("SELECT SUM(duration * hourly_rate) FROM lessons")
+    total_all = c2.fetchone()[0] or 0
+    conn2.close()
+
     # Pass data to template
     earnings_data_json = json.dumps(earnings_data)
     return render_template(
@@ -87,7 +99,12 @@ def index():
         earnings_data_json=earnings_data_json,
         available_years=available_years,
         selected_years=selected_years,
-        upcoming_lessons=upcoming_lessons
+        upcoming_lessons=upcoming_lessons,
+        ytd_total=ytd_total,
+        mtd_total=mtd_total,
+        total_all=total_all,
+        current_month=now.month,
+        current_year=current_year
     )
 
 @app.route("/create-invoice")
