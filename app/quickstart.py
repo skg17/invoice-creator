@@ -372,8 +372,10 @@ def create_pdf(month: int = None, year: int = None, delete_html: bool = True) ->
     template = env.get_template(HTML_TEMPLATE_FILE)
     output_text = template.render(context)
     config = pdfkit.configuration(wkhtmltopdf='')
-    pdfkit.from_string(output_text, f"invoices/pdf/{year}{month:02}.pdf", configuration=config, css=CSS_FILE)
+    output_path = f"invoices/pdf/{year:04}{month:02}.pdf"
+    pdfkit.from_string(output_text, output_path, configuration=config, css=CSS_FILE)
     if delete_html:
         os.remove(HTML_TEMPLATE_FILE)
     else:
         os.rename(HTML_TEMPLATE_FILE, f"invoices/html/{year}{month:02}.html")
+    return output_path

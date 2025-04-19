@@ -1,4 +1,5 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, send_file
+import os
 from quickstart import create_pdf, sync_history, fetch_lessons, DB_FILE, Student, init_db
 import sqlite3
 import json
@@ -118,9 +119,14 @@ def index():
 
 @app.route("/create-invoice")
 def create_invoice():
-    create_pdf()
-    flash("Invoice for the current month has been created successfully.")
-    return redirect(url_for("index"))
+    # Generate PDF and return as download
+    pdf_path = create_pdf()
+    return send_file(
+        pdf_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=os.path.basename(pdf_path)
+    )
 
 @app.route("/sync-all")
 def sync_all():
@@ -130,9 +136,14 @@ def sync_all():
 
 @app.route("/create-invoice/<int:year>/<int:month>")
 def create_invoice_custom(year: int, month: int):
-    create_pdf(month, year)
-    flash(f"Invoice for {year}-{month:02} has been created successfully.")
-    return redirect(url_for("index"))
+    # Generate custom PDF and return as download
+    pdf_path = create_pdf(month, year)
+    return send_file(
+        pdf_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=os.path.basename(pdf_path)
+    )
 
 @app.route("/students", methods=["GET", "POST"])
 def manage_students():
