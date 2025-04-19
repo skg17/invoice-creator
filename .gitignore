@@ -241,3 +241,5 @@ pyrightconfig.json
 credentials.json
 token.json
 user_settings.json
+invoice.html
+*.pdf

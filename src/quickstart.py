@@ -140,7 +140,8 @@ def group_lessons(month: int, year: int) -> tuple[list[LessonList], list[float]]
         if i == len(lessons_info) - 1:
             month_lessons.append(week)
 
-        elif (i != len(lessons_info) - 1 and lesson.weekday > lessons_info[i + 1].weekday) or (int(lessons_info[i + 1].date.split('/')[0]) >= int(lesson.date.split('/')[0]) + 7):
+        elif (i != len(lessons_info) - 1 and lesson.weekday > lessons_info[i + 1].weekday) or \
+            (int(lessons_info[i + 1].date.split('/')[0]) >= int(lesson.date.split('/')[0]) + 7):
             month_lessons.append(week)
             week = []    
 

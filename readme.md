@@ -64,7 +64,7 @@ invoice-creator/
 ### First Run
 1. **Navigate to the app directory:**
     ```bash
-        cd src/invoice_creator
+        cd app/invoice_creator
     ```
 2. **Run the script:**
     ```bash
