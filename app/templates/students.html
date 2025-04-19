@@ -74,7 +74,7 @@
           <div class="student-details">
             <div class="label">Level</div>
             <div class="value">
-              <select name="level-{{ student.id }}" disabled>
+              <select name="level-{{ student.id }}" class="styled-select" disabled>
                 {% for lvl in filter_levels %}
                   <option value="{{ lvl }}" {% if lvl == student.level %}selected{% endif %}>{{ lvl }}</option>
                 {% endfor %}
@@ -82,7 +82,7 @@
             </div>
             <div class="label">Year</div>
             <div class="value">
-              <select name="year-{{ student.id }}" disabled>
+              <select name="year-{{ student.id }}" class="styled-select" disabled>
                 {% for yr in filter_years %}
                   <option value="{{ yr }}" {% if yr == student.year %}selected{% endif %}>{{ yr }}</option>
                 {% endfor %}
@@ -90,7 +90,7 @@
             </div>
             <div class="label">Exam Board</div>
             <div class="value">
-              <select name="exam_board-{{ student.id }}" disabled>
+              <select name="exam_board-{{ student.id }}" class="styled-select" disabled>
                 {% for board in filter_boards %}
                   <option value="{{ board }}" {% if board == student.exam_board %}selected{% endif %}>{{ board }}</option>
                 {% endfor %}
@@ -108,7 +108,7 @@
           </div>
           <div class="active-checkbox">
             <label>Status:
-              <select name="active-{{ student.id }}" disabled>
+              <select name="active-{{ student.id }}" class="styled-select" disabled>
                 {% for val, label in filter_active %}
                   <option value="{{ val }}" {% if student.active == val %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}

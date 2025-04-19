@@ -21,15 +21,15 @@
       <h2>Upcoming Lessons</h2>
       {% if upcoming_lessons %}
         {% for lesson in upcoming_lessons %}
-          <div class="lesson-card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="lesson-card">
             <div class="lesson-info">
               <div><strong>{{ lesson.relative }}</strong></div>
-              <div style="font-size:0.9em; color:#666;">({{ lesson.actual }})</div>
+              <div class="actual-date">({{ lesson.actual }})</div>
               <div>{{ lesson.start_time }} - {{ lesson.end_time }}</div>
             </div>
-            <div class="lesson-student-info" style="text-align:right;">
-              <div style="font-weight:bold; font-size:1.1em;">{{ lesson.student.name }}</div>
-              <div style="font-size:0.9em; color:#666;">
+            <div class="lesson-student-info">
+              <div class="lesson-student-name">{{ lesson.student.name }}</div>
+              <div class="lesson-student-meta">
                 {{ lesson.student.level }}, {{ lesson.student.year }} - {{ lesson.student.subject }} ({{ lesson.student.exam_board }})
               </div>
             </div>
@@ -73,22 +73,18 @@
     <div class="modal-content">
       <h2>Custom Invoice</h2>
       <div class="modal-body">
-        <label>
-          Month:
-          <select id="modal-invoice-month">
-            {% for m in range(1,13) %}
-              <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label>
-          Year:
-          <select id="modal-invoice-year">
-            {% for y in available_years %}
-              <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
-            {% endfor %}
-          </select>
-        </label>
+        <p>Month</p>
+        <select id="modal-invoice-month">
+          {% for m in range(1,13) %}
+            <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+        <p>Year</p>
+        <select id="modal-invoice-year">
+          {% for y in available_years %}
+            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
       </div>
       <div class="modal-footer">
         <button id="cancel-modal" class="button-pill secondary">Cancel</button>
