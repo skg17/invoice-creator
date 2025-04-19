@@ -4,6 +4,12 @@ import sqlite3
 import json
 import datetime
 
+# Filter options for student management
+FILTER_YEARS = ['Year 9', 'Year 10', 'Year 11', 'Year 12', 'Year 13']
+FILTER_LEVELS = ['GCSE', 'A Level']
+FILTER_EXAM_BOARDS = ['AQA', 'Edexcel', 'OCR A', 'OCR B', 'iGCSE']
+FILTER_ACTIVE = [(1, 'Current'), (0, 'Past')]
+
 app = Flask(__name__, template_folder='templates')
 app.secret_key = 'supersecretkey'
 DASHBOARD = 'index.html'
@@ -108,29 +114,63 @@ def manage_students():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     if request.method == "POST":
-        student_id = int(request.form["id"])
-        level = request.form.get("level")
-        year = request.form.get("year")
-        exam_board = request.form.get("exam_board")
-        target_grade = request.form.get("target_grade")
-        subject = request.form.get("subject")
-        active = 1 if request.form.get("active") == "on" else 0
-        c.execute("""
-            UPDATE students
-            SET level=?, year=?, exam_board=?, target_grade=?, subject=?, active=?
-            WHERE id=?
-        """, (level, year, exam_board, target_grade, subject, active, student_id))
+        student_ids = request.form.getlist("student_ids")
+        for student_id in student_ids:
+            level = request.form.get(f"level-{student_id}")
+            year = request.form.get(f"year-{student_id}")
+            exam_board = request.form.get(f"exam_board-{student_id}")
+            target_grade = request.form.get(f"target_grade-{student_id}")
+            subject = request.form.get(f"subject-{student_id}")
+            active = 1 if request.form.get(f"active-{student_id}") == "on" else 0
+            c.execute("""
+                UPDATE students
+                SET level=?, year=?, exam_board=?, target_grade=?, subject=?, active=?
+                WHERE id=?
+            """, (level, year, exam_board, target_grade, subject, active, student_id))
         conn.commit()
-        flash("Student updated successfully.")
+        flash("Students updated successfully.")
         return redirect(url_for("manage_students"))
-    # GET: fetch all students
-    c.execute("""
+    # GET: fetch all students with optional filters
+    year_filter = request.args.get('year')
+    level_filter = request.args.get('level')
+    board_filter = request.args.get('exam_board')
+    active_param = request.args.get('active')
+    # Build query with defaults: current students only
+    query = """
         SELECT id, name, level, year, exam_board, target_grade, subject, active
         FROM students
-    """)
+    """
+    filters = []
+    args = []
+    # Default to current students if no active filter provided
+    if active_param is None:
+        filters.append("active = ?")
+        args.append(1)
+    else:
+        filters.append("active = ?")
+        args.append(int(active_param))
+    if year_filter:
+        filters.append("year = ?")
+        args.append(year_filter)
+    if level_filter:
+        filters.append("level = ?")
+        args.append(level_filter)
+    if board_filter:
+        filters.append("exam_board = ?")
+        args.append(board_filter)
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
+    c.execute(query, tuple(args))
     students = c.fetchall()
     conn.close()
-    return render_template(STUDENTS_HTML, students=students)
+    return render_template(
+        STUDENTS_HTML,
+        students=students,
+        filter_years=FILTER_YEARS,
+        filter_levels=FILTER_LEVELS,
+        filter_boards=FILTER_EXAM_BOARDS,
+        filter_active=FILTER_ACTIVE
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)

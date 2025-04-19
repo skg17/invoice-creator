@@ -1,22 +1,116 @@
 <!DOCTYPE html>
 <html>
-  <head><title>Manage Students</title></head>
+  <head>
+    <meta charset="UTF-8">
+    <title>Manage Students</title>
+    <style>
+      .student-card {
+        margin-bottom: 1.5em;
+        padding: 0.5em;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .student-card h3 {
+        margin: 0 0 0.5em 0;
+      }
+      nav form {
+        margin-bottom: 1em;
+      }
+    </style>
+  </head>
   <body>
     <h1>Manage Students</h1>
-    {% for id, name, level, year, exam_board, target_grade, subject, active in students %}
-      <form method="post">
-        <input type="hidden" name="id" value="{{ id }}">
-        <label>Name: {{ name }}</label><br>
-        <label>Level: <input name="level" value="{{ level or '' }}"></label><br>
-        <label>Year: <input name="year" value="{{ year or '' }}"></label><br>
-        <label>Exam Board: <input name="exam_board" value="{{ exam_board or '' }}"></label><br>
-        <label>Target Grade: <input name="target_grade" value="{{ target_grade or '' }}"></label><br>
-        <label>Subject: <input name="subject" value="{{ subject or '' }}"></label><br>
-        <label>Active: <input type="checkbox" name="active" {% if active %}checked{% endif %}></label><br>
-        <button type="submit">Save</button>
+    <nav>
+      <form method="get">
+        <label>Year:
+          <select name="year">
+            <option value="">All</option>
+            {% for yr in filter_years %}
+              <option value="{{ yr }}" {% if request.args.get('year') == yr %}selected{% endif %}>{{ yr }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Level:
+          <select name="level">
+            <option value="">All</option>
+            {% for lvl in filter_levels %}
+              <option value="{{ lvl }}" {% if request.args.get('level') == lvl %}selected{% endif %}>{{ lvl }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Exam Board:
+          <select name="exam_board">
+            <option value="">All</option>
+            {% for board in filter_boards %}
+              <option value="{{ board }}" {% if request.args.get('exam_board') == board %}selected{% endif %}>{{ board }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Status:
+          <select name="active">
+            <option value="">All</option>
+            {% for val, label in filter_active %}
+              <option value="{{ val }}" {% if request.args.get('active') == val|string %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit">Filter</button>
       </form>
+    </nav>
+
+    <form method="post">
+      <button type="submit">Save All Changes</button>
       <hr>
-    {% endfor %}
+      {% for student in students %}
+        <div class="student-card">
+          <h3>{{ student[1] }}</h3>
+          <input type="hidden" name="student_ids" value="{{ student[0] }}">
+          <div>
+            <label>Level:
+              <select name="level-{{ student[0] }}">
+                {% for lvl in filter_levels %}
+                  <option value="{{ lvl }}" {% if lvl == student[2] %}selected{% endif %}>{{ lvl }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+          <div>
+            <label>Year:
+              <select name="year-{{ student[0] }}">
+                {% for yr in filter_years %}
+                  <option value="{{ yr }}" {% if yr == student[3] %}selected{% endif %}>{{ yr }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+          <div>
+            <label>Exam Board:
+              <select name="exam_board-{{ student[0] }}">
+                {% for board in filter_boards %}
+                  <option value="{{ board }}" {% if board == student[4] %}selected{% endif %}>{{ board }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+          <div>
+            <label>Target Grade:
+              <input type="text" name="target_grade-{{ student[0] }}" value="{{ student[5] or '' }}">
+            </label>
+          </div>
+          <div>
+            <label>Subject:
+              <input type="text" name="subject-{{ student[0] }}" value="{{ student[6] or '' }}">
+            </label>
+          </div>
+          <div>
+            <label>Active:
+              <input type="checkbox" name="active-{{ student[0] }}" {% if student[7] %}checked{% endif %}>
+            </label>
+          </div>
+        </div>
+      {% endfor %}
+    </form>
+
     <a href="{{ url_for('index') }}">Back to dashboard</a>
   </body>
 </html>
