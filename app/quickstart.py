@@ -29,9 +29,9 @@ class Student:
 
 # Constants
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
-CREDENTIALS_FILE = "credentials.json"
-TOKEN_FILE = "token.json"
-DB_FILE = "lessons.db"
+CREDENTIALS_FILE = 'credentials.json'
+TOKEN_FILE = 'token.json'
+DB_FILE = 'lessons.db'
 HTML_TEMPLATE_FILE = 'invoices/html/invoice.html'
 CSS_FILE = 'static/css/invoice_styles.css'
 HEAD_TEMPLATE = 'templates/head.html'
@@ -95,6 +95,9 @@ def init_db():
     cols = [row[1] for row in c.fetchall()]
     if 'student_id' not in cols:
         c.execute("ALTER TABLE lessons ADD COLUMN student_id INTEGER")
+    # Add weekday column to lessons if missing
+    if 'weekday' not in cols:
+        c.execute("ALTER TABLE lessons ADD COLUMN weekday INTEGER")
     # Ensure SQLite enforces FKs
     c.execute("PRAGMA foreign_keys = ON")
     # Add active column to students if missing and initialize active flags on first migration
@@ -329,11 +332,12 @@ def group_lessons(month: int, year: int) -> tuple[list[LessonList], list[float]]
 
 def create_html(month_lessons: list[LessonList], weekly_totals: list[float]) -> None:
     """Creates an HTML invoice using pre-set templates."""
-    hourly_rate = USER_SETTINGS["hourly_rate"]
+    hourly_rate = int(USER_SETTINGS["hourly_rate"])
+    TEMP_HTML_OUTPUT = f"invoices/html/invoice.html"
     with open(HEAD_TEMPLATE) as head, \
          open(TAIL_TEMPLATE) as tail, \
          open(NEW_TABLE_TEMPLATE) as table, \
-         open(HTML_TEMPLATE_FILE, 'w') as out:
+         open(TEMP_HTML_OUTPUT, 'w') as out:
         out.write(head.read())
         rows = table.read()
         for i, week in enumerate(month_lessons):
@@ -365,15 +369,17 @@ def create_pdf(month: int = None, year: int = None, delete_html: bool = True) ->
         'sort_code': USER_SETTINGS["sort_code"],
         'monthly_total': f"{sum(weekly_totals):.2f}"
     }
-    loader = jinja2.FileSystemLoader('./')
+    TEMP_HTML_OUTPUT = f"invoices/html/invoice.html"
+    loader = jinja2.FileSystemLoader('invoices/html')
     env = jinja2.Environment(loader=loader)
-    template = env.get_template(HTML_TEMPLATE_FILE)
+    template = env.get_template('invoice.html')
     output_text = template.render(context)
-    config = pdfkit.configuration(wkhtmltopdf='')
+    WKHTMLTOPDF_PATH = '/usr/local/bin/wkhtmltopdf'
+    config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
     output_path = f"invoices/pdf/{year:04}{month:02}.pdf"
     pdfkit.from_string(output_text, output_path, configuration=config, css=CSS_FILE)
     if delete_html:
-        os.remove(HTML_TEMPLATE_FILE)
+        os.remove(TEMP_HTML_OUTPUT)
     else:
-        os.rename(HTML_TEMPLATE_FILE, f"invoices/html/{year}{month:02}.html")
+        os.rename(TEMP_HTML_OUTPUT, f"invoices/html/{year}{month:02}.html")
     return output_path
